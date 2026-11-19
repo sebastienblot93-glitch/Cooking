@@ -55,11 +55,19 @@ p{font-size:19px;line-height:1.4;margin:.4em 0}
 .roles div{border-left:2px solid;padding:4px 12px;font-size:17px;line-height:1.35}
 .roles .r1{border-color:var(--sol)}.roles .r2{border-color:var(--lune)}
 .stars{font-size:46px;letter-spacing:.15em;color:var(--gold2)}
-.stars .off{color:#3a4463}
+.off{color:#3a4463!important}
 .stats{display:flex;justify-content:center;gap:26px;flex-wrap:wrap;margin:8px 0 14px}
 .stats div{font-family:'Josefin Sans',sans-serif;font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:#b9ae96}
 .stats b{display:block;font-family:'Poiret One',cursive;font-size:30px;color:var(--gold2);letter-spacing:.05em;font-weight:400}
-#bar{width:100%;display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:14px}
+#bar{width:min(100%,640px)}
+#carnetPanel{display:none}
+.status{font-size:15px;color:#b9ae96;align-self:center;margin-right:8px}
+.keys{display:flex;justify-content:center;gap:40px;margin:14px 0 6px;align-items:center}
+.keys>div{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:16px;color:#d9cdb3}
+.keys kbd{font-size:16px;min-width:34px;padding:5px 8px;margin:2px}
+.keys .space{min-width:150px}
+.pad{text-align:center;line-height:1}
+.small-btn{font-size:11px;padding:7px 12px}
 .panel{border:1px solid rgba(212,175,55,.45);background:rgba(14,20,36,.85);padding:10px 14px;font-size:16px;line-height:1.7}
 .panel .pt{font-family:'Josefin Sans',sans-serif;font-size:12px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:4px}
 .panel.sol .pt{color:#f08a63}.panel.lune .pt{color:#5cc8b8}.panel.mid .pt{color:var(--gold)}
@@ -96,25 +104,16 @@ kbd.wide{min-width:70px}
     <div id="overlay" class="screen"></div>
   </div>
   <div id="bar">
-    <div class="panel me">
-      <div class="pt" id="barMeT">Ta cuisine</div>
-      <div><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> (ou ZQSD) se déplacer</div>
-      <div><kbd class="wide">Espace</kbd> ou <kbd class="wide">Entrée</kbd> tout le reste</div>
-      <div class="howto">Appuyer : prendre, poser, actionner<br>Rester appuyé sur une planche : couper</div>
-    </div>
-    <div class="panel mid">
+    <div class="panel mid" id="carnetPanel">
       <div class="pt">Carnet des liens</div>
       <ul id="carnetList"></ul><div class="howto" id="carnetEmpty"></div>
     </div>
-    <div class="panel room">
-      <div class="pt">Salle</div>
-      <div id="barRoom">Pas encore dans une salle.</div>
-    </div>
   </div>
   <div id="tools">
+    <span id="barRoom" class="status"></span>
     <button class="btn" id="pauseBtn">Pause</button>
     <button class="btn" id="muteBtn">Son : activé</button>
-    <button class="btn" id="menuBtn">Menu dégustation</button>
+    <button class="btn" id="menuBtn">Menu</button>
   </div>
 </div>
 <script>
@@ -168,46 +167,46 @@ const plated=(p,k)=>p.held&&p.held.k==='assiette'&&(k?p.held.c.includes(k):p.hel
 const LEVELS=[
  {id:'a1',course:'Apéritif',num:'I',name:'Le premier reflet',map:MAP_A1,subs:{t:'f',C:'R'},hidden:false,mode:'goal',goal:3,timeStars:[180,300],
   recipes:[['tranches'],['fraises']],first:[['tranches'],['fraises']],
-  nouveau:'Votre planche coupe aussi dans le miroir.',
+  nouveau:'Ta planche coupe aussi… de l’autre côté.',
   intro:'La planche de Lune n’a pas de couteau. Quand Soleil coupe sur sa planche, la planche reflet de Lune est coupée en même temps.',
   but:'Servez 3 assiettes chacun. Pas de chrono : prenez votre temps, les flèches dorées vous guident.',
   tuto:[[
-   ['Va devant la caisse de tomates (en haut) et appuie sur Espace',K=>kitchenHas(K,'tomate_cru')||kitchenHas(K,'tomate_coupe')],
-   ['Pose la tomate sur ta planche, à droite : Espace',K=>{const b=KH_(K,'C');return (b.item&&b.item.k==='tomate')||kitchenHas(K,'tomate_coupe');}],
-   ['Reste appuyé sur Espace pour couper',K=>kitchenHas(K,'tomate_coupe')],
-   ['Reprends la tomate et pose-la sur la pile d’assiettes',(K,p)=>plated(p)||K.served>0],
-   ['Apporte l’assiette à la passe dorée, à gauche',K=>K.served>0],
-   ['Lune a besoin de toi : quand sa fraise est sur sa planche reflet, reste appuyé sur ta planche !',K=>G.kitchens[1].served>0]
+   ['Prends une tomate dans la caisse',K=>kitchenHas(K,'tomate_cru')||kitchenHas(K,'tomate_coupe')],
+   ['Pose-la sur ta planche',K=>{const b=KH_(K,'C');return (b.item&&b.item.k==='tomate')||kitchenHas(K,'tomate_coupe');}],
+   ['Reste appuyé pour couper',K=>kitchenHas(K,'tomate_coupe')],
+   ['Pose-la sur les assiettes',(K,p)=>plated(p)||K.served>0],
+   ['Sers à la passe dorée',K=>K.served>0],
+   ['Lune a besoin de toi : coupe sur ta planche !',K=>G.kitchens[1].served>0]
   ],[
-   ['Va devant la caisse de fraises (en haut) et appuie sur Espace',K=>kitchenHas(K,'fraise_cru')||kitchenHas(K,'fraise_coupe')],
-   ['Pose la fraise sur ta planche reflet, à gauche : Espace',K=>{const b=KH_(K,'R');return (b.item&&b.item.k==='fraise')||kitchenHas(K,'fraise_coupe');}],
-   ['Pas de couteau ici ! Demande à Soleil de couper sur sa planche',K=>kitchenHas(K,'fraise_coupe')],
-   ['Reprends la fraise et pose-la sur la pile d’assiettes',(K,p)=>plated(p)||K.served>0],
-   ['Apporte l’assiette à la passe dorée, à droite',K=>K.served>0]
+   ['Prends une fraise dans la caisse',K=>kitchenHas(K,'fraise_cru')||kitchenHas(K,'fraise_coupe')],
+   ['Pose-la sur ta planche',K=>{const b=KH_(K,'R');return (b.item&&b.item.k==='fraise')||kitchenHas(K,'fraise_coupe');}],
+   ['Pas de couteau… demande à Soleil de couper !',K=>kitchenHas(K,'fraise_coupe')],
+   ['Pose-la sur les assiettes',(K,p)=>plated(p)||K.served>0],
+   ['Sers à la passe dorée',K=>K.served>0]
   ]],
   links:[{f:[0,'C','chop'],t:[1,'R','chop'],label:'Couper sur la planche Soleil coupe aussi la planche reflet Lune'}]},
  {id:'a2',course:'Apéritif',num:'II',name:'Chaud et froid',map:MAP_A2,subs:{t:'c',F:'G',C:'R'},patch:[[1,0,'f']],hidden:false,mode:'goal',goal:3,timeStars:[240,390],
   recipes:[['tranches','soupe'],['fraises','sorbet']],first:[['soupe'],['sorbet']],
-  nouveau:'Votre feu s’allume… depuis l’autre cuisine.',
+  nouveau:'Ton feu s’allume depuis l’autre cuisine.',
   intro:'Le levier de Lune allume et éteint le fourneau de Soleil. Le levier de Soleil allume et éteint la sorbetière de Lune. Un plat prêt qu’on oublie finit brûlé ou gelé !',
   but:'Servez 3 assiettes chacun. Toujours pas de chrono.',
   tuto:[[
-   ['Coupe une tomate, puis mets-la dans la marmite (en haut)',K=>!!KH_(K,'F').item||K.served>0],
-   ['Ton feu s’allume depuis la Cuisine Lune : demande à Lune d’actionner son levier !',K=>KH_(K,'F').on||K.served>0],
-   ['Soupe prête ? Prends une assiette, puis appuie devant la marmite',(K,p)=>plated(p,'soupe')||K.served>0],
-   ['Sers-la à la passe… et demande à Lune d’éteindre ton feu !',K=>K.served>0]
+   ['Coupe une tomate, mets-la dans la marmite',K=>!!KH_(K,'F').item||K.served>0],
+   ['Demande à Lune d’allumer ton feu !',K=>KH_(K,'F').on||K.served>0],
+   ['Prends une assiette, puis la soupe',(K,p)=>plated(p,'soupe')||K.served>0],
+   ['Sers… et fais éteindre ton feu !',K=>K.served>0]
   ],[
-   ['Pose un citron sur ta planche reflet et demande à Soleil de couper',K=>kitchenHas(K,'citron_coupe')||!!KH_(K,'G').item||K.served>0],
-   ['Mets le citron coupé dans la sorbetière (en haut)',K=>!!KH_(K,'G').item||K.served>0],
-   ['Ta sorbetière s’allume depuis la Cuisine Soleil : demande à Soleil d’actionner son levier !',K=>KH_(K,'G').on||K.served>0],
-   ['Sorbet prêt ? Prends une assiette, appuie devant la sorbetière, puis sers-le',K=>K.served>0]
+   ['Fais couper un citron par Soleil',K=>kitchenHas(K,'citron_coupe')||!!KH_(K,'G').item||K.served>0],
+   ['Mets-le dans la sorbetière',K=>!!KH_(K,'G').item||K.served>0],
+   ['Demande à Soleil d’allumer ta sorbetière !',K=>KH_(K,'G').on||K.served>0],
+   ['Prends une assiette, puis le sorbet, et sers',K=>K.served>0]
   ]],
   links:[{f:[0,'C','chop'],t:[1,'R','chop'],label:'Couper sur la planche Soleil coupe aussi la planche reflet Lune'},
          {f:[0,'L','use'],t:[1,'G','power'],label:'Levier Soleil : allume ou éteint la sorbetière Lune'},
          {f:[1,'L','use'],t:[0,'F','power'],label:'Levier Lune : allume ou éteint le fourneau Soleil'}]},
  {id:'e1',course:'Entrée',num:'I',name:'Reflets cachés',map:MAP_E1,subs:{t:'c',F:'G',C:'R'},patch:[[1,0,'f']],hidden:true,mode:'goal',goal:4,timeStars:[300,480],
   recipes:[['tranches','soupe'],['fraises','sorbet']],first:[['soupe'],['sorbet']],
-  nouveau:'Les fils dorés ont disparu.',
+  nouveau:'Les liens sont cachés.',
   intro:'Chaque cuisine a maintenant deux leviers. Lequel allume le feu de l’autre ? Testez, observez, et dites à voix haute ce que vous faites. Attention : un levier est un piège.',
   but:'Servez 4 assiettes chacun. Pas de chrono.',
   links:[{f:[0,'C','chop'],t:[1,'R','chop'],label:'Couper sur la planche Soleil coupe aussi la planche reflet Lune'},
@@ -217,7 +216,7 @@ const LEVELS=[
          {f:[1,'M','use'],t:[0,null,'spawn','tomate'],label:'Levier bas de Lune : fait apparaître une tomate chez Soleil'}]},
  {id:'e2',course:'Entrée',num:'II',name:'Gestes du quotidien',map:MAP_E2,subs:{t:'c',l:'f',F:'G'},hidden:true,mode:'timed',dur:200,interval:18,limit:70,maxOrders:2,stars:[80,160,240],
   recipes:[['salade','soupe'],['fruits','sorbet']],first:[['salade'],['fruits']],
-  nouveau:'Le chrono démarre, et chacun a son couteau.',
+  nouveau:'Chrono. Deux ingrédients par plat.',
   intro:'Les plats ont maintenant deux ingrédients. Plus de leviers : les liens se cachent dans le robinet, la poubelle, la planche… Si vous coupez en même temps, tout va deux fois plus vite.',
   but:'Faites un maximum de points avant la fin du chrono.',
   links:[{f:[0,'C','chop'],t:[1,'C','chop'],label:'Couper chez Soleil coupe aussi chez Lune'},
@@ -228,7 +227,7 @@ const LEVELS=[
          {f:[1,'X','trash'],t:[0,null,'dark'],label:'Jeter chez Lune éteint la lumière chez Soleil (piège)'}]},
  {id:'e3',course:'Entrée',num:'III',name:'Coup de feu',map:MAP_E3,subs:{t:'c',l:'f',F:'G'},hidden:true,mode:'timed',dur:210,interval:14,limit:62,maxOrders:3,stars:[110,220,320],
   recipes:[['salade','soupe'],['fruits','sorbet']],first:[['soupe'],['sorbet']],
-  nouveau:'Grand service : tout en même temps.',
+  nouveau:'Coup de feu.',
   intro:'Trois leviers et un robinet de chaque côté, huit liens cachés et des leurres qui ne font rien. Le carnet des liens se remplit tout seul : servez-vous-en !',
   but:'Faites un maximum de points avant la fin du chrono.',
   links:[{f:[0,'C','chop'],t:[1,'C','chop'],label:'Couper chez Soleil coupe aussi chez Lune'},
@@ -863,7 +862,7 @@ function drawFooter(){
   const ox=OX[k],col=k?'#7fd6c9':'#f4a07f';let msg=null,step=false;
   if(G&&(state==='play'||state==='pause')){const K=G.kitchens[k],tu=G.L.tuto&&G.L.tuto[k];
    if(tu&&K.step<tu.length){msg=tu[K.step][0];step=true;}
-   else if(G.goal)msg=K.served>=G.L.goal?'Objectif atteint ! Aide ton partenaire si besoin.':'Objectif : '+K.served+' / '+G.L.goal+' assiettes servies';}
+   else if(G.goal)msg=K.served>=G.L.goal?'Objectif atteint !':K.served+' / '+G.L.goal+' assiettes';}
   if(!msg){rrect(ox+KPX/2-110,y+6,220,24,3,'#10172b','#d4af37',1);c.fillStyle=col;c.font='15px "Poiret One",serif';c.textAlign='center';c.fillText(k?'✦  CUISINE LUNE  ✦':'✦  CUISINE SOLEIL  ✦',ox+KPX/2,y+23);continue;}
   const pulse=step?.5+Math.sin(ANIM*4)*.5:0;
   rrect(ox+4,y,KPX-8,42,4,'#10172b',step?'rgba(241,215,138,'+(.5+pulse*.5)+')':'rgba(212,175,55,.6)',step?2:1);
@@ -998,20 +997,15 @@ function guestStep(dt){
 
 // ---------- Carnet ----------
 function renderCarnet(){
- const ul=document.getElementById('carnetList'),em=document.getElementById('carnetEmpty');
- if(!G||!G.L.hidden){ul.innerHTML='';em.textContent=G&&!G.L.hidden?'Ici, les fils dorés montrent tous les liens du miroir.':'Les liens découverts s’inscriront ici.';return;}
- const found=G.links.filter(l=>l.found),hid=G.links.length-found.length;
- em.textContent='';
- ul.innerHTML=found.map(l=>'<li>'+l.label+'</li>').join('')+(hid?'<li class="mys">'+hid+' lien'+(hid>1?'s':'')+' mystère encore caché'+(hid>1?'s':'')+'</li>':'');
+ const ul=document.getElementById('carnetList'),em=document.getElementById('carnetEmpty'),pn=document.getElementById('carnetPanel');
+ const on=!!(G&&G.L.hidden);pn.style.display=on?'block':'none';if(!on){ul.innerHTML='';return;}
+ const found=G.links.filter(l=>l.found),hid=G.links.length-found.length;em.textContent='';
+ ul.innerHTML=found.map(l=>'<li>'+l.label+'</li>').join('')+(hid?'<li class="mys">'+hid+' caché'+(hid>1?'s':'')+'</li>':'');
 }
 function updBar(){
- const me=meI(),t=document.getElementById('barMeT'),r=document.getElementById('barRoom');
- if(t){t.textContent=NET.role?'Ta cuisine : '+(me?'Lune':'Soleil'):'Ta cuisine';t.style.color=NET.role?(me?'#5cc8b8':'#f08a63'):'';}
- if(r){
-  if(!NET.role)r.innerHTML='Pas encore dans une salle.';
-  else r.innerHTML='Code : <b class="code">'+NET.code+'</b><br>'+(NET.partner?'Partenaire connecté ✓':'En attente du partenaire…')+(NET.ping!=null?'<br><span class="small">Latence : '+NET.ping+' ms</span>':'');
- }
- const mb=document.getElementById('menuBtn');if(mb)mb.style.display=NET.role==='guest'?'none':'';
+ const r=document.getElementById('barRoom');
+ if(r)r.innerHTML=NET.role?'Salle <b class="code">'+NET.code+'</b> · '+(NET.partner?'2/2':'1/2')+(NET.ping!=null?' · '+NET.ping+' ms':''):'';
+ const mb=document.getElementById('menuBtn');if(mb)mb.style.display=NET.role==='host'?'':'none';
 }
 
 // ---------- Écrans ----------
@@ -1022,36 +1016,34 @@ function starsHtml(n){let s='';for(let i=0;i<3;i++)s+=i<n?'★':'<span class="of
 function showMsg(txt){state='lobby';show(`<div class="card"><h2>${txt}</h2><p class="small">Un instant…</p></div>`);}
 function titleScreen(){
  state='title';const pre=(location.hash||'').replace('#','').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);
- show(`<div class="card"><div class="deco">✦ ✦ ✦</div><h1>CUISINE MIROIR</h1><p class="sub">Le Palace des Deux Reflets</p>
- <p>Deux cuisines, un miroir, et des liens invisibles entre elles.<br>Ce que vous faites d’un côté… se produit de l’autre.</p>
- <p class="small">Jeu coopératif en ligne pour deux joueurs, chacun sur son ordinateur.</p>
- <div class="lobby"><div><h3>Nouvelle partie</h3><p class="small">Tu joueras la Cuisine Soleil et choisiras les services.</p><button class="btn primary" data-act="create">Créer une salle</button></div>
- <div><h3>Rejoindre</h3><p class="small">Entre le code donné par ton partenaire (Cuisine Lune).</p><input id="joinCode" maxlength="4" placeholder="ABCD" value="${pre}" autocomplete="off" spellcheck="false"><button class="btn" data-act="join">Rejoindre</button></div></div>
+ show(`<div class="card"><div class="deco">✦ ✦ ✦</div><h1>CUISINE MIROIR</h1><p class="sub">Deux cuisines. Un miroir.</p>
+ <div class="lobby"><div><button class="btn primary" data-act="create">Créer une salle</button></div>
+ <div><input id="joinCode" maxlength="4" placeholder="CODE" value="${pre}" autocomplete="off" spellcheck="false"><button class="btn" data-act="join">Rejoindre</button></div></div>
  ${NET.joinErr?`<p class="err">${NET.joinErr}</p>`:''}</div>`);
  const inp=document.getElementById('joinCode');
  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();joinRoom(inp.value);}});
  inp.addEventListener('input',()=>{inp.value=inp.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);});
 }
-function noServer(){state='title';show(`<div class="card"><h2>SERVEUR INTROUVABLE</h2><p>Le jeu en ligne a besoin de son serveur.</p><p class="small">Ouvre le jeu depuis son adresse Render (…onrender.com). Si le serveur dormait, il se réveille en une minute environ : réessaie.</p><button class="btn primary" data-act="title">Retour</button></div>`);}
-function lostServer(){state='title';show(`<div class="card"><h2>CONNEXION PERDUE</h2><p>La connexion au serveur a été coupée.</p><button class="btn primary" data-act="title">Retour à l’accueil</button></div>`);}
+function noServer(){state='title';show(`<div class="card"><h2>SERVEUR INTROUVABLE</h2><p class="small">Ouvre le jeu depuis son adresse Render. S’il dormait, réessaie dans une minute.</p><button class="btn primary" data-act="title">Retour</button></div>`);}
+function lostServer(){state='title';show(`<div class="card"><h2>CONNEXION PERDUE</h2><button class="btn primary" data-act="title">Retour</button></div>`);}
 function waitScreen(info){
  state='lobby';const link=location.origin+location.pathname+'#'+NET.code;
- show(`<div class="card"><div class="deco">SALLE CRÉÉE</div><h2>DONNE CE CODE À TON PARTENAIRE</h2><div class="bigcode">${NET.code}</div>
- <p class="small">Ou envoie-lui ce lien : <span class="link">${link}</span></p><button class="btn" data-act="copy" data-l="${link}">Copier le lien</button>
- ${info?`<p class="err">${info}</p>`:''}<p class="sub">En attente de ton partenaire…</p><button class="btn" data-act="leave">Annuler</button></div>`);
+ show(`<div class="card"><div class="deco">SALLE</div><div class="bigcode">${NET.code}</div>
+ <button class="btn" data-act="copy" data-l="${link}">Copier le lien</button><button class="btn" data-act="leave">Annuler</button>
+ ${info?`<p class="err">${info}</p>`:''}<p class="sub">En attente…</p></div>`);
 }
 function partnerLeft(hostLeft){
- if(hostLeft){netClose();state='title';show(`<div class="card"><h2>SALLE FERMÉE</h2><p>Ton partenaire a quitté la partie.</p><button class="btn primary" data-act="title">Retour à l’accueil</button></div>`);}
- else{NET.partner=false;NET.ready=[false,false];waitScreen('Ton partenaire s’est déconnecté. Il peut revenir avec le même code.');}
+ if(hostLeft){netClose();state='title';show(`<div class="card"><h2>SALLE FERMÉE</h2><button class="btn primary" data-act="title">Retour</button></div>`);}
+ else{NET.partner=false;NET.ready=[false,false];waitScreen('Partenaire déconnecté.');}
 }
 function charsScreen(){
  state='chars';const me=meI();choice[me]=mySkin;
  const team=k=>{const mine=k===me;
   const roster=mine?SKINS.map((s,i)=>`<button class="chr${choice[k]===i?' sel':''}" data-act="pick" data-i="${i}"><canvas width="84" height="84" data-skin="${i}" data-team="${k}"></canvas><span>${s.nom}</span></button>`).join('')
    :`<div class="chr sel" style="cursor:default"><canvas width="84" height="84" data-skin="${choice[k]}" data-team="${k}"></canvas><span>${SKINS[choice[k]].nom}</span></div>`;
-  return `<div class="team ${k?'lune':'sol'}"><h3>${k?'Cuisine Lune':'Cuisine Soleil'} · ${mine?'toi':'ton partenaire'}</h3><div class="roster">${roster}</div><div class="desc">${SKINS[choice[k]].desc}</div></div>`;};
- show(`<div class="card"><div class="deco">SALLE ${NET.code}</div><h2>LA BRIGADE</h2><p class="small">Choisis ton commis avec <kbd>←</kbd> <kbd>→</kbd>.</p><div class="chars">${team(0)}${team(1)}</div>
- ${isHost()?'<button class="btn primary" data-act="menu" style="margin-top:16px">Choisir le service (Espace)</button>':'<p class="sub" style="margin-top:14px">Ton partenaire (Cuisine Soleil) va choisir le service…</p>'}</div>`);
+  return `<div class="team ${k?'lune':'sol'}"><h3>${mine?'Toi':'Partenaire'}</h3><div class="roster">${roster}</div></div>`;};
+ show(`<div class="card"><h2>LA BRIGADE</h2><div class="chars">${team(0)}${team(1)}</div>
+ ${isHost()?'<button class="btn primary" data-act="menu" style="margin-top:16px">Continuer</button>':''}</div>`);
  drawPreviews();
 }
 function drawPreviews(){
@@ -1061,27 +1053,25 @@ function setChoice(i){mySkin=(i+SKINS.length)%SKINS.length;choice[meI()]=mySkin;
 function hostMenu(){netSend({t:'menu'});menuScreen();}
 function menuScreen(){state='menu';
  const rows=COURSES.map(cn=>{const lv=LEVELS.map((L,i)=>({L,i})).filter(o=>o.L.course===cn);
-  const inner=lv.length?lv.map(({L,i})=>`<button class="btn lvbtn" data-act="brief" data-i="${i}">${L.num} · ${L.name}<span class="st">${starsHtml(BEST[L.id]||0)}</span></button>`).join(''):'<span class="soon">Bientôt au menu</span>';
+  const inner=lv.length?lv.map(({L,i})=>`<button class="btn lvbtn" data-act="brief" data-i="${i}">${L.num} · ${L.name}<span class="st">${starsHtml(BEST[L.id]||0)}</span></button>`).join(''):'<span class="soon">Bientôt</span>';
   return `<div class="course"><div class="cname">${cn}</div><div class="lv">${inner}</div></div>`;}).join('');
- show(`<div class="card"><h2>MENU DÉGUSTATION</h2><p class="small">Une seule nouveauté par service. L’Apéritif apprend les gestes, l’Entrée ne pardonne plus.</p>${rows}
- <div class="opts"><button class="btn" data-act="opt" data-o="hints">Flèches d’aide : ${HINTLBL[OPTS.hints]||'Apéritif seulement'}</button><button class="btn" data-act="opt" data-o="relax">Rythme : ${OPTS.relax?'tranquille':'normal'}</button><button class="btn" data-act="tochars">Changer de commis</button></div>
- <p class="small">Rythme tranquille : commandes plus longues et aucune pénalité quand une commande est perdue.</p></div>`);
+ show(`<div class="card"><h2>MENU</h2>${rows}
+ <div class="opts"><button class="btn small-btn" data-act="opt" data-o="hints">Aide : ${HINTLBL[OPTS.hints]||'Apéritif seulement'}</button><button class="btn small-btn" data-act="opt" data-o="relax">Rythme : ${OPTS.relax?'tranquille':'normal'}</button><button class="btn small-btn" data-act="tochars">Commis</button></div></div>`);
 }
-function guestMenuWait(){state='menu';show(`<div class="card"><h2>MENU DÉGUSTATION</h2><p class="sub">Ton partenaire choisit le service…</p><p class="small">Tu joues la Cuisine Lune. Déplace-toi avec les flèches, et fais tout le reste avec Espace ou Entrée.</p></div>`);}
+function guestMenuWait(){state='menu';show(`<div class="card"><h2>MENU</h2><p class="sub">Ton partenaire choisit…</p></div>`);}
 function hostBrief(i){netSend({t:'brief',i});briefScreen(i);}
 function briefScreen(i){
  state='brief';levelIdx=i;NET.ready=[false,false];startLevel(i);const L=LEVELS[i];
- const fin=L.mode==='goal'?'':`<p class="small">Étoiles : ${L.stars.join(' · ')} points · Durée : ${Math.floor(L.dur/60)} min ${L.dur%60?L.dur%60+' s':''}</p>`;
+ const keys=(i===0||!NET.keysShown)?`<div class="keys"><div><span class="pad"><kbd>↑</kbd><br><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span><span>bouger</span></div><div><kbd class="space">Espace</kbd><span>tout le reste</span></div></div>`:'';NET.keysShown=true;
  show(`<div class="card"><div class="deco">${L.course.toUpperCase()} · ${L.num}</div><h2>${L.name.toUpperCase()}</h2>
- <div class="newb">NOUVEAU</div><p class="big">${L.nouveau}</p><p>${L.intro}</p><p><b>${L.but}</b></p>${fin}
- <p class="small">Tu joues la <b>Cuisine ${meI()?'Lune':'Soleil'}</b> · <kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd> + <kbd>Espace</kbd></p>
+ <p class="big">${L.nouveau}</p>${keys}
  <div class="readies"><span id="rd0"></span><span id="rd1"></span></div>
- <button class="btn primary" data-act="ready" id="readyBtn">Je suis prêt (Espace)</button>${isHost()?'<button class="btn" data-act="menu">Menu</button>':''}</div>`);
+ <button class="btn primary" data-act="ready" id="readyBtn">Prêt</button>${isHost()?'<button class="btn" data-act="menu">Menu</button>':''}</div>`);
  updReady();
 }
 function updReady(){
- for(const k of [0,1]){const el=document.getElementById('rd'+k);if(el)el.innerHTML=(k?'Lune':'Soleil')+' : '+(NET.ready[k]?'<b class="ok">prêt ✓</b>':'lit les consignes…');}
- const b=document.getElementById('readyBtn');if(b&&NET.ready[meI()]){b.textContent='En attente du partenaire…';b.disabled=true;}
+ for(const k of [0,1]){const el=document.getElementById('rd'+k);if(el)el.innerHTML=(k===meI()?'Toi':'Partenaire')+(NET.ready[k]?' <b class="ok">✓</b>':' …');}
+ const b=document.getElementById('readyBtn');if(b&&NET.ready[meI()]){b.textContent='En attente…';b.disabled=true;}
 }
 function setReady(){if(state!=='brief'||NET.ready[meI()])return;NET.ready[meI()]=true;netSend({t:'ready'});updReady();tryStart();}
 function tryStart(){if(isHost()&&state==='brief'&&NET.ready[0]&&NET.ready[1]){netSend({t:'start',i:levelIdx});startLevel(levelIdx);go();}}
@@ -1100,11 +1090,10 @@ function showResult(r){
  state='result';const L=LEVELS[r.idx];levelIdx=r.idx;
  if(r.n>(BEST[L.id]||0)){BEST[L.id]=r.n;save('best',BEST);}SFX0.end();
  const next=r.idx+1<LEVELS.length;
- const verdict=['Le chef fronce les sourcils… réessayez !','Un service honorable.','Un très beau service !','Service étoilé ! Le palace vous salue.'][r.n];
- const btns=isHost()?(next?`<button class="btn primary" data-act="brief" data-i="${r.idx+1}">Service suivant (Espace)</button>`:'<p class="small">Fin de l’Entrée. Le Plat arrive bientôt au menu !</p>')+`<button class="btn" data-act="brief" data-i="${r.idx}">Rejouer</button><button class="btn" data-act="menu">Menu</button>`:'<p class="small">Ton partenaire choisit la suite…</p>';
- show(`<div class="card"><div class="deco">${L.course.toUpperCase()} · ${L.num} · ${L.name.toUpperCase()}</div><h2>FIN DU SERVICE</h2><div class="stars">${starsHtml(r.n)}</div><p class="sub">${verdict}</p>
- <div class="stats">${r.goal?`<div><b>${Math.floor(r.tm/60)}:${String(r.tm%60).padStart(2,'0')}</b>temps</div>`:`<div><b>${r.s}</b>points</div><div><b>${r.lost}</b>commandes perdues</div>`}<div><b>${r.served}</b>plats servis</div><div><b>${r.found}/${r.total}</b>liens trouvés</div></div>
- ${r.goal?`<p class="small">3 étoiles en moins de ${Math.floor(L.timeStars[0]/60)} min ${L.timeStars[0]%60?L.timeStars[0]%60+' s':''}</p>`:''}${btns}</div>`);
+ const main=r.goal?`${Math.floor(r.tm/60)}:${String(r.tm%60).padStart(2,'0')}`:`${r.s} pts`;
+ const btns=isHost()?(next?`<button class="btn primary" data-act="brief" data-i="${r.idx+1}">Suivant</button>`:'')+`<button class="btn" data-act="brief" data-i="${r.idx}">Rejouer</button><button class="btn" data-act="menu">Menu</button>`:'';
+ show(`<div class="card"><h2>${L.name.toUpperCase()}</h2><div class="stars">${starsHtml(r.n)}</div>
+ <div class="stats"><div><b>${main}</b>${r.goal?'temps':'score'}</div>${r.total>1||L.hidden?`<div><b>${r.found}/${r.total}</b>liens</div>`:''}</div>${btns}</div>`);
 }
 ov.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;audioInit();const a=b.dataset.act;
  if(a==='create')createRoom();
