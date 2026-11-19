@@ -1,14 +1,17 @@
 # yaml-language-server: $schema=https://render.com/schema/render.yaml.json
-# Blueprint Render : le jeu est rangé dans le projet "Cooking", environnement "production".
-# C'est un site statique (un seul fichier index.html, aucune compilation).
+# Blueprint Render : projet "Cooking", environnement "production".
+# Le jeu en ligne a besoin d'un petit serveur Node (salles + WebSocket), sans dépendance à installer.
 projects:
   - name: Cooking
     environments:
       - name: production
         services:
           - type: web
-            runtime: static
-            name: cuisine-miroir
+            runtime: node
+            name: cuisine-miroir-en-ligne
+            plan: free
+            region: frankfurt
             branch: main
-            buildCommand: echo "Aucune compilation necessaire"
-            staticPublishPath: ./
+            buildCommand: echo "Aucune dependance a installer"
+            startCommand: node server.js
+            healthCheckPath: /healthz

@@ -1,0 +1,14 @@
+{
+  "name": "cuisine-miroir",
+  "version": "1.0.0",
+  "description": "Jeu de cuisine coopératif en ligne pour deux joueurs, chacun sur son PC.",
+  "main": "server.js",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "UNLICENSED"
+}
