@@ -32,9 +32,11 @@ Bientôt : Plat (liens inversés), Fromage (liens à retardement), Dessert (pass
 
 ## Mettre en ligne sur Render (version actuelle : deux joueurs sur le même écran)
 
-1. Sur [render.com](https://render.com), **New → Static Site**, puis choisir ce dépôt.
-2. Build command : laisser vide. Publish directory : `.`
-3. Valider : le jeu est accessible à l'adresse fournie par Render.
+Le dépôt contient un fichier `render.yaml` (Blueprint) :
+
+1. Sur [render.com](https://render.com), **New → Blueprint**, puis choisir ce dépôt et la branche `main`.
+2. Render lit `render.yaml` et crée le site statique `cuisine-miroir`. Valider avec **Apply**.
+3. Le jeu est accessible à l'adresse fournie par Render (`https://cuisine-miroir.onrender.com` ou proche).
 
 ## Feuille de route : jeu à distance
 
