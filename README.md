@@ -35,7 +35,7 @@ Bientôt : Plat (liens inversés), Fromage (liens à retardement), Dessert (pass
 Le dépôt contient un fichier `render.yaml` (Blueprint) :
 
 1. Sur [render.com](https://render.com), **New → Blueprint**, puis choisir ce dépôt et la branche `main`.
-2. Render lit `render.yaml` et crée le site statique `cuisine-miroir`. Valider avec **Apply**.
+2. Render lit `render.yaml`, crée le projet **Cooking** (environnement `production`) et y range le site statique `cuisine-miroir`. Valider avec **Apply**.
 3. Le jeu est accessible à l'adresse fournie par Render (`https://cuisine-miroir.onrender.com` ou proche).
 
 ## Feuille de route : jeu à distance
