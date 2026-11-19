@@ -66,7 +66,7 @@ async def play_level(A, B, i, timeout, shorten=None):
             break
         await A.wait_for_timeout(500)
     await A.evaluate('()=>window.__bot.stop()'); await B.evaluate('()=>window.__bot.stop()')
-    info = await A.evaluate('''()=>{const G=window.__cm.G;return {served:G.kitchens.map(K=>K.served),score:G.score,el:Math.round(G.elapsed),found:G.links.filter(l=>l.found).length,total:G.links.length,state:window.__cm.state}}''')
+    info = await A.evaluate('''()=>{const G=window.__cm.G;return {tot:G.served,lost:G.lost,served:G.kitchens.map(K=>K.served),score:G.score,el:Math.round(G.elapsed),found:G.links.filter(l=>l.found).length,total:G.links.length,state:window.__cm.state}}''')
     info['guest_state'] = await state(B)
     info['secs'] = round(time.time() - t0)
     return info
@@ -148,18 +148,15 @@ async def main():
             A, B, code, ok = await pair(b, url)
             import os as _o
             sel=_o.environ.get('LV')
-            levels = [(0, 'Apéritif I', 120, None), (1, 'Apéritif II', 180, None), (2, 'Entrée I', 240, None), (3, 'Entrée II', 110, 90), (4, 'Entrée III', 110, 90)]
+            levels = [(0, 'Apéritif I', 150, None), (1, 'Apéritif II', 220, None), (2, 'Entrée I', 300, None), (3, 'Entrée II', 300, None), (4, 'Entrée III', 110, 90)]
             if sel: levels=[l for l in levels if str(l[0]) in sel.split(',')]
             for i, name, to, sh in levels:
                 info = await play_level(A, B, i, to, sh)
                 if info is None:
                     report(f'Campagne {name}', False, 'démarrage impossible'); continue
-                goal = i <= 2
-                need = 3 if i < 2 else 4
-                if goal:
-                    ok = info['state'] == 'result' and info['guest_state'] == 'result' and min(info['served']) >= need
-                else:
-                    ok = info['state'] == 'result' and info['guest_state'] == 'result' and min(info['served']) >= 1
+                goal = i <= 3
+                need = [4,5,6,6][i] if goal else 3
+                ok = info['state'] == 'result' and info['guest_state'] == 'result' and info['tot'] >= need
                 report(f'Campagne {name} jouée au clavier par 2 joueurs', ok, json.dumps(info))
             bw = await B.evaluate('()=>0')
             report('Aucune erreur JavaScript (campagne)', not A.errs and not B.errs, str((A.errs + B.errs)[:3]))
@@ -170,7 +167,7 @@ async def main():
             await A.wait_for_timeout(3500)
             ping = await B.evaluate('()=>window.__cm.NET.ping')
             info = await play_level(A, B, 1, 200, None)
-            ok = info and info['state'] == 'result' and min(info['served']) >= 3
+            ok = info and info['state'] == 'result' and info['tot'] >= 5
             report(f'Apéritif II avec ~{ping} ms de latence réseau', bool(ok), json.dumps(info))
             # bande passante : taille moyenne d'un instantané
             size = await A.evaluate('()=>{const s=JSON.stringify(window.__cm.G?{}:{});return 0}')

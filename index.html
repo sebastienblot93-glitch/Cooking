@@ -135,7 +135,7 @@ const THEME=[
  {name:'Soleil',floorA:'#f8e9cd',floorB:'#e4bd8f',top:'#cf8f57',front:'#5e331b',trim:'#e6bb62',grain:'rgba(255,225,180,.3)',accent:'#e0603a',knob:'#d8452b',wall:'#7a2e1c',wallLine:'rgba(241,200,120,.35)',lamp:'rgba(255,210,140,1)',light:'rgba(255,238,195,.38)',jar1:'#e0a040',jar2:'#c0563a'},
  {name:'Lune',floorA:'#ecf4f2',floorB:'#b8d7d3',top:'#8aacbf',front:'#2a4253',trim:'#e4ecf1',grain:'rgba(255,255,255,.35)',accent:'#2a9d8f',knob:'#2f7fd1',wall:'#123f47',wallLine:'rgba(200,235,240,.3)',lamp:'rgba(170,220,255,1)',light:'rgba(225,246,255,.38)',jar1:'#7bc5b8',jar2:'#5b8fd1'}
 ];
-const CHARTYPE={'.':'floor','1':'floor','#':'counter','C':'board','R':'mboard','F':'stove','G':'freezer','P':'plates','S':'serve','X':'trash','L':'lever','M':'lever','N':'lever','W':'sink','t':'crate','l':'crate','c':'crate','f':'crate'};
+const CHARTYPE={'.':'floor','1':'floor','#':'counter','C':'board','R':'mboard','F':'stove','G':'freezer','P':'plates','S':'serve','X':'trash','L':'lever','M':'lever','N':'lever','W':'sink','H':'hatch','t':'crate','l':'crate','c':'crate','f':'crate'};
 const CRATE={t:'tomate',l:'laitue',c:'citron',f:'fraise'};
 const CHOP=new Set(['tomate','laitue','citron','fraise']);
 const PLATEABLE=new Set(['tomate_coupe','laitue_coupe','citron_coupe','fraise_coupe','soupe','sorbet']);
@@ -158,89 +158,75 @@ const SKINS=[
  {id:'radis',nom:'Radis',desc:'Croquant, rose et très organisé.',body:'#e35b86',shade:'#b8395f'},
  {id:'champi',nom:'Champi',desc:'Discret sous son chapeau, jamais en retard.',body:'#f0e2cb',shade:'#cdb894'}
 ];
-const MAP_A1=["#t#######","#.......#","S.......C","#..##...#","P.......#","#...1...#","##X######"];
-const MAP_A2=["#t###F###","#.......L","S.......C","#..##...#","P.......#","#...1...#","##X######"];
-const MAP_E1=["#t###F###","#.......L","S.......C","#..##...M","P.......#","#...1...#","##X######"];
-const MAP_E2=["#t#l#F###","#.......#","S.......C","#..##...W","P.......#","#...1...#","##X######"];
-const MAP_E3=["#t#l#F#L#","#.......M","S.......C","#..##...N","P.......#","#...1...W","##X######"];
 const KH_=(K,ch)=>tileByChar(K,ch);
 const plated=(p,k)=>p.held&&p.held.k==='assiette'&&(k?p.held.c.includes(k):p.held.c.length>0);
+const LUNE_BASE=["#########","#.......#","H.......P","#..##...#","H.......S","#...1...#","######X##"];
 const LEVELS=[
- {id:'a1',course:'Apéritif',num:'I',name:'Le premier reflet',map:MAP_A1,subs:{t:'f',C:'R'},hidden:false,mode:'goal',goal:3,timeStars:[180,300],
-  recipes:[['tranches'],['fraises']],first:[['tranches'],['fraises']],
-  nouveau:'Ta planche coupe aussi… de l’autre côté.',
-  intro:'La planche de Lune n’a pas de couteau. Quand Soleil coupe sur sa planche, la planche reflet de Lune est coupée en même temps.',
-  but:'Servez 3 assiettes chacun. Pas de chrono : prenez votre temps, les flèches dorées vous guident.',
+ {id:'p1',course:'Apéritif',num:'I',name:'Le passe-plat',mode:'goal',goal:4,timeStars:[100,170],
+  map:["#t##C####","#.......#","#.......H","#..##...#","#.......H","#...1...#","##X######"],
+  lmap:LUNE_BASE,
+  recipes:['tranches'],first:['tranches'],patience:999,interval:6,maxOrders:1,
+  nouveau:'Le miroir est un passe-plat.',
   tuto:[[
-   ['Prends une tomate dans la caisse',K=>kitchenHas(K,'tomate_cru')||kitchenHas(K,'tomate_coupe')],
-   ['Pose-la sur ta planche',K=>{const b=KH_(K,'C');return (b.item&&b.item.k==='tomate')||kitchenHas(K,'tomate_coupe');}],
-   ['Reste appuyé pour couper',K=>kitchenHas(K,'tomate_coupe')],
-   ['Pose-la sur la pile d’assiettes',(K,p)=>plated(p)||K.served>0],
-   ['Sers à la passe dorée',K=>K.served>0],
-   ['Lune a besoin de toi : coupe sur ta planche !',K=>G.kitchens[1].served>0||kitchenHas(G.kitchens[1],'fraise_coupe')]
+   ['Prends une tomate',K=>kitchenHas(K,'tomate_cru')||kitchenHas(K,'tomate_coupe')||G.sent>0],
+   ['Pose-la sur la planche et reste appuyé pour couper',K=>kitchenHas(K,'tomate_coupe')||G.sent>0],
+   ['Pose-la dans le miroir ➜',K=>G.sent>0],
+   ['Continue ! Lune dresse et sert',K=>G.served>0]
   ],[
-   ['Prends une fraise dans la caisse',K=>kitchenHas(K,'fraise_cru')||kitchenHas(K,'fraise_coupe')],
-   ['Pose-la sur ta planche',K=>{const b=KH_(K,'R');return (b.item&&b.item.k==='fraise')||kitchenHas(K,'fraise_coupe');}],
-   ['Pas de couteau… demande à Soleil de couper !',K=>kitchenHas(K,'fraise_coupe')],
-   ['Pose-la sur la pile d’assiettes',(K,p)=>plated(p)||K.served>0],
-   ['Sers à la passe dorée',K=>K.served>0]
+   ['Attends : Soleil prépare une tomate…',K=>G.recv>0],
+   ['Prends ce qui sort du miroir',(K,p)=>!!p.held||G.served>0],
+   ['Pose-le sur la pile d’assiettes',(K,p)=>plated(p)||G.served>0],
+   ['Sers à la cloche dorée',K=>G.served>0]
   ]],
-  links:[{f:[0,'C','chop'],t:[1,'R','chop'],label:'Couper sur la planche Soleil coupe aussi la planche reflet Lune'}]},
- {id:'a2',course:'Apéritif',num:'II',name:'Chaud et froid',map:MAP_A2,subs:{t:'c',F:'G',C:'R'},patch:[[1,0,'f']],hidden:false,mode:'goal',goal:3,timeStars:[240,390],
-  recipes:[['tranches','soupe'],['fraises','sorbet']],first:[['soupe'],['sorbet']],
-  nouveau:'Ton feu s’allume depuis l’autre cuisine.',
-  intro:'Le levier de Lune allume et éteint le fourneau de Soleil. Le levier de Soleil allume et éteint la sorbetière de Lune. Un plat prêt qu’on oublie finit brûlé ou gelé !',
-  but:'Servez 3 assiettes chacun. Toujours pas de chrono.',
+  links:[]},
+ {id:'p2',course:'Apéritif',num:'II',name:'Soupe du jour',mode:'goal',goal:5,timeStars:[150,250],autoOn:true,
+  map:["#t##C####","#.......#","#.......H","#..##...#","#.......H","#...1...#","##X######"],
+  lmap:["####F####","#.......#","H.......P","#..##...#","H.......S","#...1...#","######X##"],
+  recipes:['tranches','soupe'],first:['soupe','tranches'],patience:110,interval:16,maxOrders:2,
+  nouveau:'Une marmite chez Lune.',
   tuto:[[
-   ['Coupe une tomate, mets-la dans la marmite',K=>!!KH_(K,'F').item||K.served>0],
-   ['Demande à Lune d’allumer ton feu !',K=>KH_(K,'F').on||K.served>0],
-   ['Prends une assiette, puis la soupe',(K,p)=>plated(p,'soupe')||K.served>0],
-   ['Sers… et fais éteindre ton feu !',K=>K.served>0]
+   ['Une soupe ? Envoie une tomate coupée',K=>G.served>0||G.sent>0]
   ],[
-   ['Fais couper un citron par Soleil',K=>kitchenHas(K,'citron_coupe')||!!KH_(K,'G').item||K.served>0],
-   ['Mets-le dans la sorbetière',K=>!!KH_(K,'G').item||K.served>0],
-   ['Demande à Soleil d’allumer ta sorbetière !',K=>KH_(K,'G').on||K.served>0],
-   ['Prends une assiette, puis le sorbet, et sers',K=>K.served>0]
+   ['Mets la tomate coupée dans la marmite',K=>!!KH_(K,'F').item||G.served>0],
+   ['Soupe prête ? Prends une assiette, puis la soupe',(K,p)=>plated(p,'soupe')||G.served>0],
+   ['Sers vite : ça brûle !',K=>G.served>0]
   ]],
-  links:[{f:[0,'C','chop'],t:[1,'R','chop'],label:'Couper sur la planche Soleil coupe aussi la planche reflet Lune'},
-         {f:[0,'L','use'],t:[1,'G','power'],label:'Levier Soleil : allume ou éteint la sorbetière Lune'},
-         {f:[1,'L','use'],t:[0,'F','power'],label:'Levier Lune : allume ou éteint le fourneau Soleil'}]},
- {id:'e1',course:'Entrée',num:'I',name:'Reflets cachés',map:MAP_E1,subs:{t:'c',F:'G',C:'R'},patch:[[1,0,'f']],hidden:true,mode:'goal',goal:4,timeStars:[300,480],
-  recipes:[['tranches','soupe'],['fraises','sorbet']],first:[['soupe'],['sorbet']],
-  nouveau:'Les liens sont cachés.',
-  intro:'Chaque cuisine a maintenant deux leviers. Lequel allume le feu de l’autre ? Testez, observez, et dites à voix haute ce que vous faites. Attention : un levier est un piège.',
-  but:'Servez 4 assiettes chacun. Pas de chrono.',
-  links:[{f:[0,'C','chop'],t:[1,'R','chop'],label:'Couper sur la planche Soleil coupe aussi la planche reflet Lune'},
-         {f:[0,'M','use'],t:[1,'G','power'],label:'Levier bas de Soleil : allume ou éteint la sorbetière Lune'},
-         {f:[0,'L','use'],t:[1,null,'dark'],label:'Levier haut de Soleil : plonge la Cuisine Lune dans le noir (piège)'},
-         {f:[1,'L','use'],t:[0,'F','power'],label:'Levier haut de Lune : allume ou éteint le fourneau Soleil'},
-         {f:[1,'M','use'],t:[0,null,'spawn','tomate'],label:'Levier bas de Lune : fait apparaître une tomate chez Soleil'}]},
- {id:'e2',course:'Entrée',num:'II',name:'Gestes du quotidien',map:MAP_E2,subs:{t:'c',l:'f',F:'G'},hidden:true,mode:'timed',dur:200,interval:18,limit:70,maxOrders:2,stars:[80,160,240],
-  recipes:[['salade','soupe'],['fruits','sorbet']],first:[['salade'],['fruits']],
-  nouveau:'Chrono. Deux ingrédients par plat.',
-  intro:'Les plats ont maintenant deux ingrédients. Plus de leviers : les liens se cachent dans le robinet, la poubelle, la planche… Si vous coupez en même temps, tout va deux fois plus vite.',
-  but:'Faites un maximum de points avant la fin du chrono.',
-  links:[{f:[0,'C','chop'],t:[1,'C','chop'],label:'Couper chez Soleil coupe aussi chez Lune'},
-         {f:[1,'C','chop'],t:[0,'C','chop'],label:'Couper chez Lune coupe aussi chez Soleil'},
-         {f:[0,'W','use'],t:[1,'G','power'],label:'Robinet Soleil : allume ou éteint la sorbetière Lune'},
-         {f:[1,'W','use'],t:[0,'F','power'],label:'Robinet Lune : allume ou éteint le fourneau Soleil'},
-         {f:[0,'X','trash'],t:[1,null,'dark'],label:'Jeter chez Soleil éteint la lumière chez Lune (piège)'},
-         {f:[1,'X','trash'],t:[0,null,'dark'],label:'Jeter chez Lune éteint la lumière chez Soleil (piège)'}]},
- {id:'e3',course:'Entrée',num:'III',name:'Coup de feu',map:MAP_E3,subs:{t:'c',l:'f',F:'G'},hidden:true,mode:'timed',dur:210,interval:14,limit:62,maxOrders:3,stars:[110,220,320],
-  recipes:[['salade','soupe'],['fruits','sorbet']],first:[['soupe'],['sorbet']],
-  nouveau:'Coup de feu.',
-  intro:'Trois leviers et un robinet de chaque côté, huit liens cachés et des leurres qui ne font rien. Le carnet des liens se remplit tout seul : servez-vous-en !',
-  but:'Faites un maximum de points avant la fin du chrono.',
-  links:[{f:[0,'C','chop'],t:[1,'C','chop'],label:'Couper chez Soleil coupe aussi chez Lune'},
-         {f:[1,'C','chop'],t:[0,'C','chop'],label:'Couper chez Lune coupe aussi chez Soleil'},
-         {f:[0,'N','use'],t:[1,'G','power'],label:'Levier du milieu Soleil : sorbetière Lune'},
-         {f:[1,'L','use'],t:[0,'F','power'],label:'Levier du haut Lune : fourneau Soleil'},
-         {f:[0,'M','use'],t:[1,null,'dark'],label:'Levier mural Soleil : noir chez Lune (piège)'},
-         {f:[1,'W','use'],t:[0,null,'dark'],label:'Robinet Lune : noir chez Soleil (piège)'},
-         {f:[0,'W','use'],t:[1,null,'spawn','fraise'],label:'Robinet Soleil : une fraise apparaît chez Lune'},
-         {f:[1,'M','use'],t:[0,null,'spawn','laitue'],label:'Levier mural Lune : une laitue apparaît chez Soleil'}]}
+  links:[]},
+ {id:'p3',course:'Entrée',num:'I',name:'Donnant-donnant',mode:'goal',goal:6,timeStars:[200,330],autoOn:true,
+  map:["#t#l#C###","#.......#","#.......H","#..##...#","#.......H","#...1...#","##X######"],
+  lmap:["##c#G####","#.......#","H.......P","#..##...#","H.......S","#...1...#","######X##"],
+  recipes:['salade','sorbet'],first:['sorbet','salade'],patience:120,interval:18,maxOrders:2,
+  nouveau:'Lune a les citrons. Soleil a le couteau.',
+  tuto:[[
+   ['Coupe le citron que Lune t’envoie, puis renvoie-le',K=>G.served>0||kitchenHas(G.kitchens[1],'citron_coupe')||!!KH_(G.kitchens[1],'G').item]
+  ],[
+   ['Envoie un citron à Soleil ➜',K=>G.sent1>0||G.served>0],
+   ['Citron coupé ? Mets-le dans la sorbetière',K=>!!KH_(K,'G').item||G.served>0]
+  ]],
+  links:[]},
+ {id:'p4',course:'Entrée',num:'II',name:'Chaud et froid',mode:'goal',goal:6,timeStars:[220,360],
+  map:["#t#c#C#G#","#.......L","#.......H","#..##...#","#.......H","#...1...#","##X######"],
+  lmap:["####F####","L.......#","H.......P","#..##...#","H.......S","#...1...#","######X##"],
+  recipes:['soupe','sorbet'],first:['soupe','sorbet'],patience:130,interval:20,maxOrders:2,
+  nouveau:'Ton levier allume le feu de l’autre.',
+  tuto:[[
+   ['Ton levier allume la marmite de Lune',K=>KH_(G.kitchens[1],'F').on||G.served>0]
+  ],[
+   ['Ton levier allume la sorbetière de Soleil',K=>KH_(G.kitchens[0],'G').on||G.served>0]
+  ]],
+  links:[{f:[0,'L','use'],t:[1,'F','power'],label:'Levier de Soleil : marmite de Lune'},
+         {f:[1,'L','use'],t:[0,'G','power'],label:'Levier de Lune : sorbetière de Soleil'}]},
+ {id:'p5',course:'Entrée',num:'III',name:'Coup de feu',mode:'timed',dur:180,patience:75,interval:13,maxOrders:3,stars:[150,260,360],hidden:true,
+  map:["#t#l#C#G#","#.......L","#.......H","M..##...#","#.......H","#...1...#","##X######"],
+  lmap:["##c#F####","L.......#","H.......P","#..##...N","H.......S","#...1...#","######X##"],
+  recipes:['salade','soupe','sorbet'],first:['salade','soupe'],
+  nouveau:'Chrono. Les leviers ont changé…',
+  links:[{f:[0,'M','use'],t:[1,'F','power'],label:'Levier du mur (Soleil) : marmite de Lune'},
+         {f:[1,'L','use'],t:[0,'G','power'],label:'Levier de Lune : sorbetière de Soleil'},
+         {f:[0,'L','use'],t:[1,null,'dark'],label:'Levier du haut (Soleil) : noir chez Lune (piège)'},
+         {f:[1,'N','use'],t:[0,null,'spawn','tomate'],label:'Levier de droite (Lune) : une tomate chez Soleil'}]}
 ];
-const COURSES=['Apéritif','Entrée','Plat','Fromage','Dessert','Digestif'];
+const COURSES=['Apéritif','Entrée','Plat','Dessert'];
 
 // ---------- Sauvegarde ----------
 function load(k,d){try{const v=localStorage.getItem('cuisineMiroir.'+k);return v?JSON.parse(v):d;}catch(e){return d;}}
@@ -265,7 +251,8 @@ const SFX={
  warn:()=>tone(1000,.07,'square',.04),order:()=>{tone(784,.1,'triangle',.07);tone(988,.14,'triangle',.07,.08);},
  dark:()=>tone(240,.8,'sine',.1,0,.35),spawn:()=>{tone(660,.1,'sine',.08);tone(990,.18,'sine',.08,.08);},
  end:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.45,'triangle',.09,i*.13)),
- step:()=>tone(1200,.12,'sine',.06)
+ step:()=>tone(1200,.12,'sine',.06),
+ whoosh:()=>{tone(500,.18,'sine',.05,0,2.2);tone(900,.2,'triangle',.03,.05,1.6);}
 };
 const SFX0={...SFX};
 for(const k of Object.keys(SFX0))SFX[k]=()=>{SFX0[k]();emit({s:k});};
@@ -306,12 +293,11 @@ function buildKitchen(id,rows){
 function tileByChar(K,ch){for(const r of K.tiles)for(const t of r)if(t.ch===ch)return t;return null;}
 function startLevel(idx){
  levelIdx=idx;const L=LEVELS[idx];
- const lm=mirrorMap(L.map,L.subs);
- for(const [x,y,ch] of (L.patch||[]))lm[y]=lm[y].slice(0,x)+ch+lm[y].slice(x+1);
- const ks=[buildKitchen(0,L.map),buildKitchen(1,lm)];
- ks[0].recipes=L.recipes[0];ks[1].recipes=L.recipes[1];ks[1].next=L.mode==='goal'?1:2.5;
+ const ks=[buildKitchen(0,L.map),buildKitchen(1,L.lmap)];
+ for(const K of ks){K.recipes=L.recipes;if(L.autoOn)for(const r of K.tiles)for(const t of r)if(MACH[t.type])t.on=true;}
  const relax=OPTS.relax&&L.mode==='timed';
- G={idx,L,goal:L.mode==='goal',elapsed:0,time:L.dur||0,limit:(L.limit||0)*(relax?1.5:1),interval:(L.interval||0)*(relax?1.3:1),penalty:relax?0:10,
+ G={idx,L,goal:L.mode==='goal',elapsed:0,time:L.dur||0,patience:(L.patience||90)*(relax?1.4:1),interval:(L.interval||15)*(relax?1.2:1),penalty:relax?0:10,
+  orders:[],next:1.2,nOrders:0,streak:0,sent:0,sent1:0,recv:0,
   score:0,served:0,lost:0,kitchens:ks,parts:[],floats:[],ripples:[],banner:null,
   links:L.links.map(s=>({...s,found:!L.hidden,pulse:0,rip:0,src:tileByChar(ks[s.f[0]],s.f[1]),dst:s.t[1]?tileByChar(ks[s.t[0]],s.t[1]):null})),
   players:[0,1].map(i=>({i,k:i,x:ks[i].spawn.x,y:ks[i].spawn.y,dir:{x:0,y:1},held:null,walk:0,moving:false,chopping:false,chopMode:false,chopTile:null,sayCd:0,last:'',snd:0,skin:choice[i],target:null,hint:null}))};
@@ -392,8 +378,8 @@ function interact(p,K){
   case 'serve':
    if(h&&h.k==='assiette'&&h.c.length)serve(K,p,t);else say(p,'Apportez une assiette garnie');
    break;
-  case 'counter':case 'board':case 'mboard':{
-   const isB=t.type!=='counter';
+  case 'counter':case 'hatch':case 'board':case 'mboard':{
+   const isB=t.type==='board'||t.type==='mboard';const wasIt=t.item;if(t.type==='hatch')t.hold=.35;
    if(!h&&t.item){p.held=t.item;t.item=null;SFX.pick();}
    else if(h&&!t.item){
     if(isB&&!(h.st==='cru'&&CHOP.has(h.k))){say(p,'La planche n’accepte que des produits crus');break;}
@@ -403,11 +389,12 @@ function interact(p,K){
     else if(t.item.k==='assiette'&&h.k!=='assiette'){if(addToPlate(K,t.item,h)){p.held=null;SFX.drop();}else say(p,'Ça ne va pas dans ce plat');}
     else say(p,'Déjà occupé');
    }
+   if(t.type==='hatch')t.send=!!t.item&&(t.item!==wasIt||t.send);
    break;}
   case 'stove':case 'freezer':{
    const M=MACH[t.type];
    if(!h){
-    if(t.item){if(t.item.k===M.out)say(p,'Il faut une assiette');else{p.held=t.item;t.item=null;t.prog=t.burn=0;SFX.pick();}}
+    if(t.item){p.held=t.item;t.item=null;t.prog=t.burn=0;SFX.pick();}
    } else if(h.k==='assiette'){
     if(t.item&&t.item.k===M.out){if(addToPlate(K,h,t.item)){t.item=null;t.prog=t.burn=0;SFX.drop();}else say(p,'Ça ne va pas dans ce plat');}
     else if(t.item&&t.item.k===M.ruin)say(p,'C’est fichu… à la poubelle !');
@@ -431,22 +418,25 @@ function chopAction(p,K,dt){
  p.snd-=dt;if(p.snd<=0){SFX.chop();p.snd=.18;}
 }
 function serve(K,p,t){
- const pl=p.held;const i=K.orders.findIndex(o=>sameMulti(pl.c,RECIPES[o.r].items));
+ const pl=p.held;const i=G.orders.findIndex(o=>sameMulti(pl.c,RECIPES[o.r].items));
  if(i<0){say(p,'Personne n’a commandé ça !');SFX.fail();return;}
- const o=K.orders[i],pts=G.goal?20:20+Math.round(10*o.t/o.max);G.score+=pts;G.served++;K.served++;K.orders.splice(i,1);p.held=null;
- const q=tc(K,t);floatAt(q.x,q.y-20,G.goal?'Bravo !':'+'+pts,'#f1d78a',24);burst(K.id,q.x,q.y,'#f5d36b',18);SFX.serve();
- if(G.goal){K.next=1.2;if(K.served>=G.L.goal)floatAt(OX[K.id]+KPX/2,OY+KH*T/2,'Objectif atteint !','#f1d78a',26);}
- else if(!K.orders.length)K.next=Math.min(K.next,2);
+ const o=G.orders[i];G.streak++;
+ const bonus=G.streak>1?Math.min(30,(G.streak-1)*5):0,pts=20+(G.goal?0:Math.round(10*o.t/o.max))+bonus;
+ G.score+=pts;G.served++;K.served++;G.orders.splice(i,1);p.held=null;
+ const q=tc(K,t);floatAt(q.x,q.y-20,'+'+pts,'#f1d78a',24);if(G.streak>1)floatAt(q.x,q.y-44,'Série ×'+G.streak+' !','#ff9ab3',18);
+ burst(K.id,q.x,q.y,'#f5d36b',18);SFX.serve();
+ if(G.goal&&G.served>=G.L.goal)floatAt(MX+MIRW/2,OY+KH*T/2-60,'Objectif atteint !','#f1d78a',26);
+ if(!G.orders.length)G.next=Math.min(G.next,1.2);
 }
-
 // ---------- Mise à jour ----------
 function update(dt){
  G.elapsed+=dt;
- if(G.goal){if(G.kitchens.every(K=>K.served>=G.L.goal)){endLevel();return;}}
+ if(G.goal){if(G.served>=G.L.goal){endLevel();return;}}
  else{G.time-=dt;if(G.time<=0){G.time=0;endLevel();return;}}
  control(G.players[0],dt,readInput());control(G.players[1],dt,remoteInput(G.players[1],dt));
  if(G.L.tuto)G.kitchens.forEach((K,i)=>{const st=G.L.tuto[i];if(K.step<st.length&&st[K.step][1](K,G.players[i])){K.step++;SFX.step();}});
- const hOn=OPTS.hints==='always'||(OPTS.hints==='auto'&&G.L.course==='Apéritif');G.players.forEach(p=>{p.hint=hOn?hintFor(p):null;});
+ updHatches(dt);updOrders(dt);
+ const hOn=OPTS.hints==='always'||(OPTS.hints==='auto'&&!G.L.hidden);G.players.forEach(p=>{p.hint=hOn?hintFor(p):null;});
  for(const K of G.kitchens){
   for(const r of K.tiles)for(const t of r){
    t.anim=Math.max(0,t.anim-dt*2.5);t.ghost=Math.max(0,t.ghost-dt);
@@ -460,7 +450,6 @@ function update(dt){
      if(t.burn>=1){t.item={k:M.ruin};t.burn=0;SFX.fail();floatAt(q.x,q.y-26,M.ruinMsg,'#ff9d8a',17);}}
    }
   }
-  updOrders(K,dt);
   K.dark=Math.max(0,K.dark-dt);
  }
  for(const L of G.links)L.pulse=Math.max(0,L.pulse-dt*1.6);
@@ -502,57 +491,83 @@ const BASE={soupe:'tomate',sorbet:'citron'};
 const baseOf=k=>BASE[k]||k.split('_')[0];
 function allTiles(K,f){const r=[];for(const row of K.tiles)for(const t of row)if(f(t))r.push(t);return r;}
 function nearestT(p,list){let b=null,bd=1e9;for(const t of list){const d=Math.hypot(t.x+.5-p.x,t.y+.5-p.y);if(d<bd){bd=d;b=t;}}return b;}
+function stationsOf(K,type){return allTiles(K,t=>t.type===type);}
+function hatchOf(K){return allTiles(K,t=>t.type==='hatch'&&!t.item);}
+function otherK(K){return G.kitchens[1-K.id];}
+function nextFor(K,it){
+ const k=key(it),O=otherK(K),here=type=>stationsOf(K,type).length>0,there=type=>stationsOf(O,type).length>0;
+ if(it.k==='assiette'){
+  if(it.c.length&&G.orders.some(q=>sameMulti(it.c,RECIPES[q.r].items)))return here('serve')?{type:'serve'}:{type:'hatch'};
+  return {type:'counter'};
+ }
+ if(it.k==='brule'||it.k==='glacon')return {type:'trash'};
+ if(rawChop(it)){const needMach=G.orders.some(o=>RECIPES[o.r].items.some(n=>BASE[n]===it.k));return here('board')?{type:'board'}:{type:'hatch'};}
+ for(const m of ['stove','freezer'])if(k===MACH[m].input&&G.orders.some(o=>RECIPES[o.r].items.includes(MACH[m].out)))return here(m)?{type:m}:{type:'hatch'};
+ if(PLATEABLE.has(k))return here('plates')?{type:'plates'}:{type:'hatch'};
+ return {type:'counter'};
+}
+function inProgress(base){for(const K of G.kitchens){if(kitchenHas(K,base+'_cru')||kitchenHas(K,base+'_coupe'))return true;}return false;}
 function hintFor(p){
  const K=G.kitchens[p.k],h=p.held;
  for(const L of G.links){
   if(!L.found||L.f[0]!==p.k||!L.dst)continue;const d=L.dst;
   if(L.t[2]==='power'){const M=MACH[d.type];if(d.item&&((key(d.item)===M.input&&!d.on)||(d.item.k===M.out&&d.on)))return L.src;}
-  if(L.t[2]==='chop'&&rawChop(d.item)&&!rawChop(L.src.item)&&!(h&&rawChop(h)))return L.src;
  }
- const o=K.orders[0];const need=o?RECIPES[o.r].items:[];
  if(h){
+  const n=nextFor(K,h);
+  if(n.type==='serve')return nearestT(p,stationsOf(K,'serve'));
+  if(n.type==='hatch')return nearestT(p,hatchOf(K))||nearestT(p,allTiles(K,t=>t.type==='counter'&&!t.item));
+  if(n.type==='board')return nearestT(p,allTiles(K,t=>t.type==='board'&&!t.item))||nearestT(p,allTiles(K,t=>t.type==='counter'&&!t.item));
+  if(n.type==='stove'||n.type==='freezer')return nearestT(p,allTiles(K,t=>t.type===n.type&&!t.item))||nearestT(p,allTiles(K,t=>t.type==='counter'&&!t.item));
+  if(n.type==='trash')return nearestT(p,stationsOf(K,'trash'));
+  if(n.type==='plates'){
+   const k=key(h);const fits=nearestT(p,allTiles(K,t=>t.item&&t.item.k==='assiette'&&t.item.c.length&&!t.item.c.includes(k)&&K.recipes.some(r=>subMulti([...t.item.c,k],RECIPES[r].items))));
+   return fits||nearestT(p,stationsOf(K,'plates'));
+  }
   if(h.k==='assiette'){
-   if(h.c.length&&K.orders.some(q=>sameMulti(h.c,RECIPES[q.r].items)))return nearestT(p,allTiles(K,t=>t.type==='serve'));
-   const miss=need.filter(k=>!h.c.includes(k));
-   const t=nearestT(p,allTiles(K,t=>t.item&&t.item.k!=='assiette'&&miss.includes(key(t.item))));
-   if(t)return t;
-   if(!h.c.length)return nearestT(p,allTiles(K,t=>t.type==='plates'));
+   const miss=[];for(const o of G.orders){const it=RECIPES[o.r].items;if(subMulti(h.c,it))miss.push(...it.filter(x=>!h.c.includes(x)));}
+   const t=nearestT(p,allTiles(K,t=>t.item&&t.item.k!=='assiette'&&miss.includes(key(t.item))&&(t.type!=='stove'&&t.type!=='freezer'||t.item.k===MACH[t.type].out)));if(t)return t;
    return nearestT(p,allTiles(K,t=>t.type==='counter'&&!t.item));
   }
-  const k=key(h);
-  if(k===MACH.stove.out||k===MACH.freezer.out)return null;
-  if(h.k==='brule'||h.k==='glacon')return nearestT(p,allTiles(K,t=>t.type==='trash'));
-  if(rawChop(h))return nearestT(p,allTiles(K,t=>(t.type==='board'||t.type==='mboard')&&!t.item))||nearestT(p,allTiles(K,t=>t.type==='counter'&&!t.item));
-  for(const t of allTiles(K,t=>MACH[t.type]))if(k===MACH[t.type].input&&!t.item&&need.includes(MACH[t.type].out))return t;
-  if(PLATEABLE.has(k)){
-   const fits=nearestT(p,allTiles(K,t=>t.item&&t.item.k==='assiette'&&t.item.c.length&&!t.item.c.includes(k)&&K.recipes.some(r=>subMulti([...t.item.c,k],RECIPES[r].items))));
-   return fits||nearestT(p,allTiles(K,t=>t.type==='plates'));
-  }
-  return null;
+  return nearestT(p,allTiles(K,t=>t.type==='counter'&&!t.item));
  }
- const platePart=allTiles(K,t=>t.type==='counter'&&t.item&&t.item.k==='assiette'&&t.item.c.length&&K.orders.some(q=>sameMulti(t.item.c,RECIPES[q.r].items)))[0];if(platePart)return platePart;
  const ruined=allTiles(K,t=>MACH[t.type]&&t.item&&t.item.k===MACH[t.type].ruin)[0];if(ruined)return ruined;
  const ch=allTiles(K,t=>t.type==='board'&&rawChop(t.item))[0];if(ch)return ch;
- const rawC=nearestT(p,allTiles(K,t=>t.type==='counter'&&rawChop(t.item)&&need.some(n=>baseOf(n)===t.item.k)));if(rawC)return rawC;
- if(allTiles(K,t=>MACH[t.type]&&t.item&&t.item.k===MACH[t.type].out).length)return nearestT(p,allTiles(K,t=>t.type==='plates'));
- const ready=nearestT(p,allTiles(K,t=>t.item&&t.item.k!=='assiette'&&t.type!=='stove'&&t.type!=='freezer'&&need.includes(key(t.item))));if(ready)return ready;
- const machIn=allTiles(K,t=>(t.type==='counter'||t.type==='board'||t.type==='mboard')&&t.item&&t.item.st==='coupe'&&allTiles(K,m=>MACH[m.type]&&key(t.item)===MACH[m.type].input&&!m.item).length&&need.some(n=>BASE[n]===t.item.k))[0];if(machIn)return machIn;
- for(const k of need){const b=baseOf(k);if(kitchenHas(K,b+'_cru')||kitchenHas(K,b+'_coupe')||kitchenHas(K,k))continue;const cr=nearestT(p,allTiles(K,t=>t.type==='crate'&&t.ing===b));if(cr)return cr;}
+ const ready=allTiles(K,t=>MACH[t.type]&&t.item&&t.item.k===MACH[t.type].out);if(ready.length)return stationsOf(K,'plates').length?nearestT(p,stationsOf(K,'plates')):ready[0];
+ const platePart=allTiles(K,t=>t.type==='counter'&&t.item&&t.item.k==='assiette'&&t.item.c.length&&G.orders.some(q=>sameMulti(t.item.c,RECIPES[q.r].items)))[0];if(platePart)return platePart;
+ const got=nearestT(p,allTiles(K,t=>{if(!t.item||!(t.type==='hatch'||t.type==='counter'||t.type==='board'))return false;if(t.type==='board'&&rawChop(t.item))return false;if(t.type==='counter'&&t.item.k==='assiette')return false;const n=nextFor(K,t.item).type;if(n==='counter')return false;if(n==='hatch')return t.type!=='hatch'&&hatchOf(K).length>0;return true;}));if(got)return got;
+ for(const o of G.orders)for(const n of RECIPES[o.r].items){
+  const b=baseOf(n);let have=0;for(const K2 of G.kitchens){if(kitchenHas(K2,b+'_cru')||kitchenHas(K2,b+'_coupe')||kitchenHas(K2,n))have=1;}
+  const cnt=G.orders.filter(q=>RECIPES[q.r].items.some(x=>baseOf(x)===b)).length;
+  let exist=0;for(const K2 of G.kitchens){for(const row of K2.tiles)for(const t of row){const it=t.item;if(!it)continue;if(it.k===b||it.k===n||(it.k==='assiette'&&it.c.some(x=>baseOf(x)===b)))exist++;}for(const pl of G.players)if(pl.k===K2.id&&pl.held&&(pl.held.k===b||pl.held.k===n||(pl.held.k==='assiette'&&pl.held.c.some(x=>baseOf(x)===b))))exist++;}
+  if(exist>=cnt)continue;
+  const cr=nearestT(p,allTiles(K,t=>t.type==='crate'&&t.ing===b));if(cr)return cr;
+ }
  return null;
 }
-function updOrders(K,dt){
- const L=G.L,pick=()=>{const f=L.first&&L.first[K.id];if(f&&K.nOrders<f.length)return f[K.nOrders];return K.recipes[Math.floor(Math.random()*K.recipes.length)];};
- for(const o of K.orders)o.age+=dt;
- if(G.goal){
-  if(!K.orders.length&&K.served<L.goal){K.next-=dt;if(K.next<=0){K.orders.push({r:pick(),t:1,max:1,age:0});K.nOrders++;SFX.order();}}
-  return;
+function updHatches(dt){
+ const [S,L]=G.kitchens;
+ for(let y=0;y<KH;y++){
+  const a=S.tiles[y][KW-1],b=L.tiles[y][0];if(a.type!=='hatch'||b.type!=='hatch')continue;
+  for(const [from,to,dir] of [[a,b,0],[b,a,1]]){
+   if(!from.item||!from.send)continue;from.hold=(from.hold||0)-dt;
+   if(from.hold<=0&&!to.item){
+    const it=from.item;from.item=null;from.send=false;to.item=it;to.hold=.6;to.send=false;
+    if(dir===0){G.sent++;G.recv++;}else G.sent1++;
+    emit({tr:[y,dir,itemSig(it)]});startTransfer(y,dir,it);SFX.whoosh();
+   }
+  }
  }
- for(const o of K.orders)o.t-=dt;
- for(let i=K.orders.length-1;i>=0;i--)if(K.orders[i].t<=0){K.orders.splice(i,1);G.score=Math.max(0,G.score-G.penalty);G.lost++;SFX.fail();floatAt(OX[K.id]+KPX/2,OY+20,G.penalty?'Commande perdue −'+G.penalty:'Commande perdue','#ff9d8a',17);}
- K.next-=dt;
- if(K.next<=0){if(K.orders.length<(L.maxOrders||3)){K.orders.push({r:pick(),t:G.limit,max:G.limit,age:0});K.nOrders++;SFX.order();}K.next=G.interval;}
 }
-
+function updOrders(dt){
+ const L=G.L,pick=()=>{if(L.first&&G.nOrders<L.first.length)return L.first[G.nOrders];return L.recipes[Math.floor(Math.random()*L.recipes.length)];};
+ for(const o of G.orders){o.age+=dt;o.t-=dt;}
+ for(let i=G.orders.length-1;i>=0;i--)if(G.orders[i].t<=0){G.orders.splice(i,1);G.score=Math.max(0,G.score-G.penalty);G.lost++;G.streak=0;SFX.fail();floatAt(MX+MIRW/2,OY+30,'Commande perdue','#ff9d8a',17);}
+ const remain=G.goal?L.goal-G.served-G.orders.length:99;
+ G.next-=dt;
+ if(G.next<=0&&remain>0&&G.orders.length<(L.maxOrders||3)){G.orders.push({r:pick(),t:G.patience,max:G.patience,age:0});G.nOrders++;SFX.order();G.next=G.interval;}
+ else if(G.next<=0)G.next=.5;
+}
 // ---------- Dessin : utilitaires ----------
 const INK='#2a1a12';
 function ell(x,y,rx,ry,col){c.fillStyle=col;c.beginPath();c.ellipse(x,y,Math.max(.1,rx),Math.max(.1,ry),0,0,Math.PI*2);c.fill();}
@@ -760,6 +775,13 @@ function drawStation(K,t){
  if(t.item&&(t.type==='counter'||t.type==='board'||t.type==='mboard'))ell(cx+1,cy+5,s*.9,s*.32,'rgba(30,12,4,.22)');
  switch(t.type){
   case 'counter':if(t.item)drawObj(t.item,cx,cy-popY,s*popS);break;
+  case 'hatch':{
+   const glow=.5+Math.sin(ANIM*3+t.y)*.5;
+   rrect(cx-T*.4,cy-T*.3,T*.8,T*.6,8,lg(cx-T*.4,0,cx+T*.4,0,[[0,'#e9eef5'],[.5,'#b9c6d6'],[1,'#f4f7fb']]),'#d4af37',2);
+   c.save();rr(cx-T*.4,cy-T*.3,T*.8,T*.6,8);c.clip();c.fillStyle='rgba(255,255,255,'+(.25+glow*.25)+')';c.beginPath();const o=(ANIM*25+t.y*20)%70-35;c.moveTo(cx+o-10,cy+18);c.lineTo(cx+o+2,cy+18);c.lineTo(cx+o+14,cy-18);c.lineTo(cx+o+2,cy-18);c.fill();c.restore();
+   c.fillStyle='rgba(212,175,55,'+(.55+glow*.45)+')';c.beginPath();const ax=K.id===0?cx+T*.28:cx-T*.28,dd=K.id===0?1:-1;c.moveTo(ax+dd*6,cy);c.lineTo(ax-dd*2,cy-6);c.lineTo(ax-dd*2,cy+6);c.fill();
+   if(t.item)drawObj(t.item,cx,cy-popY,s*popS);
+   break;}
   case 'board':case 'mboard':{
    const m=t.type==='mboard',bx=cx-T*.38,byy=cy-T*.27,bw=T*.76,bh=T*.54;
    ell(cx+2,cy+4,bw*.5,bh*.5,'rgba(30,12,4,.25)');
@@ -862,7 +884,7 @@ function thoughtFor(p,K){
  const t=p.hint;
  if(t){if(t.type==='crate')return 'i:'+t.ing+'_cru';if(t.type==='board'||t.type==='mboard')return 'knife';if(t.type==='plates')return 'plate';if(t.type==='serve')return 'bell';if(t.type==='stove')return 'flame';if(t.type==='freezer')return 'snow';if(t.type==='lever'||t.type==='sink')return 'lever';if(t.type==='trash')return 'trash';if(t.item)return 'i:'+key(t.item);}
  if(p._idle>8)return 'zzz';
- const o=K.orders[0];return o?'d:'+o.r:null;
+ const o=G.orders[0];return o?'d:'+o.r:null;
 }
 function drawBubble(p){
  const b=p._bub;if(!b)return;const K=G.kitchens[p.k];if(K.dark>0&&p.k!==meI())return;
@@ -930,6 +952,15 @@ function fxTick(dt){
  });
 }
 function drawPart(q){const a=Math.max(0,q.life/q.max);c.globalAlpha=a;if(q.kind==='puff')circ(q.x,q.y,q.r*(1.8-a),q.col);else if(q.kind==='chip'){rrect(q.x-q.r,q.y-q.r,q.r*2,q.r*1.4,1,q.col);}else if(q.kind==='heart'){const r=q.r;c.fillStyle=q.col;c.beginPath();c.moveTo(q.x,q.y+r);c.bezierCurveTo(q.x-r*1.6,q.y-r*.2,q.x-r*.6,q.y-r*1.4,q.x,q.y-r*.5);c.bezierCurveTo(q.x+r*.6,q.y-r*1.4,q.x+r*1.6,q.y-r*.2,q.x,q.y+r);c.fill();}else{c.fillStyle=q.col;c.beginPath();const r=q.r*1.6;c.moveTo(q.x,q.y-r);c.lineTo(q.x+r*.35,q.y);c.lineTo(q.x,q.y+r);c.lineTo(q.x-r*.35,q.y);c.fill();}c.globalAlpha=1;}
+const TRANS=[];
+function startTransfer(y,dir,it){TRANS.push({y,dir,it:it.k==='assiette'?{k:'assiette',c:[...it.c]}:{...it},t:0});G&&G.ripples.push({y:OY+y*T+TOPH/2-LIFT,life:1});}
+function drawTransfers(){
+ for(let i=TRANS.length-1;i>=0;i--){const tr=TRANS[i];tr.t+=DT*2.6;if(tr.t>=1){TRANS.splice(i,1);continue;}
+  const x0=OX[0]+(KW-.5)*T,x1=OX[1]+.5*T,a=tr.dir?x1:x0,b=tr.dir?x0:x1,e=tr.t<.5?2*tr.t*tr.t:1-Math.pow(-2*tr.t+2,2)/2;
+  const x=a+(b-a)*e,y=OY+tr.y*T+TOPH/2-LIFT-Math.sin(Math.PI*tr.t)*26;
+  c.save();c.globalAlpha=.35;for(let k=1;k<5;k++){circ(x-(b-a)*.04*k,y+k,3-k*.5,'#fff3c4');}c.restore();
+  c.save();c.shadowColor='#f5c542';c.shadowBlur=14;drawObj(tr.it,x,y,T*.27*(1+Math.sin(Math.PI*tr.t)*.25));c.restore();}
+}
 function drawMirror(){
  const x=MX,y=OY-WALL-FR,w=MIRW,h=KH*T+WALL+FR*2;
  rrect(x+FR+1,y,w-FR*2-2,h,8,lg(x,0,x+w,0,[[0,'#7a5c14'],[.5,'#f1d78a'],[1,'#7a5c14']]),INK,1.2);
@@ -953,14 +984,26 @@ function drawThreads(){
   if(!L.dst){c.globalAlpha=.85;c.font='16px serif';c.textAlign='center';c.fillStyle='#f5d36b';c.fillText(L.t[2]==='dark'?'☾':'✦',b.x,b.y-6);}
   c.restore();});
 }
-function drawTicket(o,x,y,k){
- const w=116,h=88,R=RECIPES[o.r],slide=Math.max(0,1-o.age*4),shake=o.t<10?Math.sin(ANIM*30)*1.5:0;
+function pipeIcons(r){
+ const it=RECIPES[r].items,out=[];
+ for(const n of it){const b=baseOf(n);out.push('i:'+b+'_cru');out.push('knife');if(n==='soupe')out.push('pot');if(n==='sorbet')out.push('snow');}
+ return out;
+}
+function miniIcon(ic,x,y){
+ if(ic.startsWith('i:'))drawItem(ic.slice(2),x,y,6.5);
+ else if(ic==='knife')knife(x,y+3,.7,false);
+ else if(ic==='pot'){ball(x,y+1,6,'#6d717b');circ(x,y,4,'#e86a3c');}
+ else if(ic==='snow'){c.fillStyle='#3d7fae';c.font='12px serif';c.textAlign='center';c.fillText('❄',x,y+4);}
+}
+function drawTicket(o,x,y){
+ const w=128,h=92,R=RECIPES[o.r],slide=Math.max(0,1-o.age*4),f=Math.max(0,o.t/o.max),shake=!G.goal&&o.t<10?Math.sin(ANIM*30)*1.5:0;
  c.save();c.translate(x+shake,y-slide*40);c.globalAlpha=1-slide;
- rrect(2,3,w,h,4,'rgba(0,0,0,.35)');rrect(0,0,w,h,4,'#f6eedc','#d4af37',1);rrect(0,0,w,8,4,THEME[k].accent);c.fillStyle=THEME[k].accent;c.fillRect(0,4,w,4);
- drawPlate({c:R.items},w/2,34,17);
- c.fillStyle='#2a2130';c.font='italic 600 14px "Cormorant Garamond",serif';c.textAlign='center';c.fillText(R.nom,w/2,68);
- if(G.goal){c.fillStyle=THEME[k].accent;c.font='600 11px "Josefin Sans",sans-serif';c.fillText('ASSIETTE '+Math.min(G.L.goal,G.kitchens[k].served+1)+' / '+G.L.goal,w/2,h-8);}
- else{const f=Math.max(0,o.t/o.max),col=f>.5?'#5aa647':f>.25?'#e0a030':'#d9372a';bar(8,h-13,w-16,f,col);}
+ rrect(2,3,w,h,5,'rgba(0,0,0,.35)');rrect(0,0,w,h,5,'#f6eedc','#d4af37',1);
+ c.fillStyle=lg(0,0,w,0,[[0,'#e0603a'],[1,'#2a9d8f']]);c.fillRect(0,0,w,7);
+ drawPlate({c:R.items},26,32,15);
+ c.fillStyle='#2a2130';c.font='italic 700 14px "Cormorant Garamond",serif';c.textAlign='left';const nm=wrapLines(R.nom,74);nm.slice(0,2).forEach((l,i)=>c.fillText(l,46,27+i*14));
+ const ics=pipeIcons(o.r);const step=Math.min(17,(w-14)/ics.length);ics.forEach((ic,i)=>{const ix=10+i*step;miniIcon(ic,ix,63);});
+ if(G.orders.length&&o.max<500){const col=f>.5?'#5aa647':f>.25?'#e0a030':'#d9372a';bar(8,h-12,w-16,f,col);}
  c.restore();
 }
 function drawHUD(){
@@ -972,9 +1015,18 @@ function drawHUD(){
  if(G){const tm=G.goal?Math.floor(G.elapsed):Math.ceil(G.time),mm=Math.floor(tm/60),ss=String(tm%60).padStart(2,'0');
   c.fillStyle=!G.goal&&G.time<20&&Math.sin(ANIM*8)>0?'#ff9d8a':'#f1d78a';c.font='34px "Poiret One",serif';c.textAlign='center';c.fillText(mm+':'+ss,mx,my+6);
   c.fillStyle='#d9cdb3';c.font='600 11px "Josefin Sans",sans-serif';c.font='600 '+(G.goal?9:11)+'px "Josefin Sans",sans-serif';c.fillText(G.goal?'SANS CHRONO':'★ '+G.score,mx,my+25);
-  G.kitchens.forEach(K=>K.orders.forEach((o,i)=>drawTicket(o,K.id===0?PAD+i*124:CW-PAD-116-i*124,12,K.id)));
-  if(!G.kitchens[0].orders.length&&!G.kitchens[1].orders.length){c.fillStyle='rgba(217,205,179,.6)';c.font='italic 16px "Cormorant Garamond",serif';c.fillText('Les commandes arrivent…',PAD+190,58);c.fillText('Les commandes arrivent…',CW-PAD-190,58);}
+  G.orders.forEach((o,i)=>drawTicket(o,PAD+i*138,10));
+  if(!G.orders.length){c.fillStyle='rgba(217,205,179,.6)';c.font='italic 16px "Cormorant Garamond",serif';c.textAlign='center';c.fillText('Une commande arrive…',PAD+200,58);}
+  const rx=CW-PAD-250;c.textAlign='left';
+  c.fillStyle='#f1d78a';c.font='26px "Poiret One",serif';c.fillText(G.goal?G.served+' / '+G.L.goal:G.score+' pts',rx,48);
+  c.fillStyle='#b9ae96';c.font='600 10px "Josefin Sans",sans-serif';c.fillText(G.goal?'ASSIETTES SERVIES ENSEMBLE':'SCORE COMMUN',rx,64);
+  if(G.streak>1){c.fillStyle='#ff9ab3';c.font='700 16px "Cormorant Garamond",serif';c.fillText('Série ×'+G.streak+(Math.sin(ANIM*6)>0?' ✦':''),rx,86);}
  }
+}
+function roleOf(rows){
+ const has=ch=>rows.some(r=>r.includes(ch)),out=[];
+ if(/[tlcf]/.test(rows.join('')))out.push('Ingrédients');if(has('C'))out.push('Couteau');if(has('F'))out.push('Marmite');if(has('G'))out.push('Sorbetière');if(has('L')||has('M')||has('N'))out.push('Leviers');if(has('S'))out.push('Service');
+ return out.join(' · ');
 }
 function wrapLines(text,maxW){const words=text.split(' '),lines=[];let cur='';for(const w of words){const t=cur?cur+' '+w:w;if(c.measureText(t).width>maxW&&cur){lines.push(cur);cur=w;}else cur=t;}if(cur)lines.push(cur);return lines;}
 function drawFooter(){
@@ -983,8 +1035,8 @@ function drawFooter(){
   const ox=OX[k],col=k?'#7fd6c9':'#f4a07f';let msg=null,step=false;
   if(G&&(state==='play'||state==='pause')){const K=G.kitchens[k],tu=G.L.tuto&&G.L.tuto[k];
    if(tu&&K.step<tu.length){msg=tu[K.step][0];step=true;}
-   else if(G.goal)msg=K.served>=G.L.goal?'Objectif atteint !':K.served+' / '+G.L.goal+' assiettes';}
-  if(!msg){rrect(ox+KPX/2-110,y+6,220,24,3,'#10172b','#d4af37',1);c.fillStyle=col;c.font='15px "Poiret One",serif';c.textAlign='center';c.fillText(k?'✦  CUISINE LUNE  ✦':'✦  CUISINE SOLEIL  ✦',ox+KPX/2,y+23);continue;}
+   }
+  if(!msg){const role=G?roleOf(k?G.L.lmap:G.L.map):'';const lbl=(k?'LUNE':'SOLEIL')+(role?'  ·  '+role:'');c.font='15px "Poiret One",serif';const w=Math.max(220,c.measureText(lbl).width+40);rrect(ox+KPX/2-w/2,y+6,w,24,3,'#10172b','#d4af37',1);c.fillStyle=col;c.textAlign='center';c.fillText(lbl,ox+KPX/2,y+23);continue;}
   const pulse=step?.5+Math.sin(ANIM*4)*.5:0;
   rrect(ox+4,y,KPX-8,42,4,'#10172b',step?'rgba(241,215,138,'+(.5+pulse*.5)+')':'rgba(212,175,55,.6)',step?2:1);
   c.font=(step?'600 ':'italic 600 ')+'16px "Cormorant Garamond",serif';c.textAlign='center';
@@ -1016,7 +1068,7 @@ function drawBanner(){
 function render(){
  c.setTransform(DPR,0,0,DPR,0,0);c.fillStyle='#0e1424';c.fillRect(0,0,CW,CH);
  drawHUD();if(G){drawKitchen(G.kitchens[0]);drawKitchen(G.kitchens[1]);}
- drawMirror();drawBond();drawThreads();drawFloats();drawBanner();drawFooter();
+ drawMirror();drawBond();drawThreads();drawTransfers();drawFloats();drawBanner();drawFooter();
 }
 
 // ---------- Réseau ----------
@@ -1067,20 +1119,20 @@ function netMsg(m){
 }
 function snapshot(){
  const ks=G.kitchens.map(K=>{const tl=[];let i=0;for(const row of K.tiles)for(const t of row){if(t.type!=='floor'&&(t.item||t.prog||t.burn||t.on||t.anim>0||t.ghost>0))tl.push([i,t.item,R2(t.prog),R2(t.burn),t.on?1:0,R2(t.anim),R2(t.ghost),R2(t.phase)]);i++;}
-  return {tl,o:K.orders.map(o=>[o.r,R2(o.t),o.max,R2(o.age)]),d:R2(K.dark),sv:K.served,st:K.step};});
+  return {tl,d:R2(K.dark),sv:K.served,st:K.step};});
  const pos=t=>t?[t.x,t.y]:null;
  const ps=G.players.map(p=>({x:R2(p.x),y:R2(p.y),dx:R2(p.dir.x),dy:R2(p.dir.y),h:p.held,w:R2(p.walk),m:p.moving?1:0,c:p.chopping?1:0,ct:pos(p.chopTile),tg:pos(p.target),hi:pos(p.hint),sk:p.skin}));
- const s={t:'snap',lvl:G.idx,tm:R2(G.time),el:R2(G.elapsed),sc:G.score,sv:G.served,lo:G.lost,k:ks,p:ps,l:G.links.map(L=>[L.found?1:0,R2(L.pulse)]),bn:G.banner,ev:NET.out};
+ const s={t:'snap',o:G.orders.map(o=>[o.r,R2(o.t),o.max,R2(o.age)]),sk:G.streak,se:[G.sent,G.sent1,G.recv],lvl:G.idx,tm:R2(G.time),el:R2(G.elapsed),sc:G.score,sv:G.served,lo:G.lost,k:ks,p:ps,l:G.links.map(L=>[L.found?1:0,R2(L.pulse)]),bn:G.banner,ev:NET.out};
  NET.out=[];return s;
 }
 function applySnap(s){
  if(!G||G.idx!==s.lvl)startLevel(s.lvl);
- G.time=s.tm;G.elapsed=s.el;G.score=s.sc;G.served=s.sv;G.lost=s.lo;G.banner=s.bn;
+ G.orders=s.o.map(([r,t,max,age])=>({r,t,max,age}));G.streak=s.sk;[G.sent,G.sent1,G.recv]=s.se;G.time=s.tm;G.elapsed=s.el;G.score=s.sc;G.served=s.sv;G.lost=s.lo;G.banner=s.bn;
  s.k.forEach((ks,ki)=>{
   const K=G.kitchens[ki],flat=[];for(const row of K.tiles)for(const t of row)flat.push(t);const seen=new Set();
   for(const [i,item,prog,burn,on,anim,ghost,phase] of ks.tl){const t=flat[i];if(!t)continue;seen.add(i);t.item=item;t.prog=prog;t.burn=burn;t.on=!!on;t.anim=anim;t.ghost=ghost;t.phase=phase;}
   flat.forEach((t,i)=>{if(!seen.has(i)&&t.type!=='floor'){t.item=null;t.prog=0;t.burn=0;t.on=false;t.anim=0;t.ghost=0;}});
-  K.orders=ks.o.map(([r,t,max,age])=>({r,t,max,age}));K.dark=ks.d;K.served=ks.sv;K.step=ks.st;
+  K.dark=ks.d;K.served=ks.sv;K.step=ks.st;
  });
  s.p.forEach((ps,i)=>{
   const p=G.players[i],K=G.kitchens[i],at=a=>a?K.tiles[a[1]][a[0]]:null;
@@ -1095,6 +1147,7 @@ function replayEv(e){
  else if(e.b)burst(e.b[0],e.b[1],e.b[2],e.b[3],e.b[4],e.b[5]||undefined,true);
  else if(e.f)G.floats.push(e.f);
  else if(e.r!==undefined)G.ripples.push({y:e.r,life:1});
+ else if(e.tr){const y=e.tr[0],dir=e.tr[1],to=G.kitchens[dir?0:1].tiles[y][dir?KW-1:0];startTransfer(y,dir,to.item||{k:'tomate',st:'cru'});SFX0.whoosh();}
 }
 function remoteInput(p,dt){
  const r=NET.remote,press=r.pr>NET.lastPr;NET.lastPr=r.pr;
@@ -1113,6 +1166,7 @@ function guestStep(dt){
  if(G.banner){G.banner.life-=dt;if(G.banner.life<=0)G.banner=null;}
  for(const Kk of G.kitchens)Kk.dark=Math.max(0,Kk.dark-dt);
  if(G.goal)G.elapsed+=dt;else G.time=Math.max(0,G.time-dt);
+ for(const o of G.orders){o.age+=dt;o.t-=dt;}
  ambientFx(dt);updFx(dt);
 }
 
@@ -1185,7 +1239,7 @@ function briefScreen(i){
  state='brief';levelIdx=i;NET.ready=[false,false];startLevel(i);const L=LEVELS[i];
  const keys=(i===0||!NET.keysShown)?`<div class="keys"><div><span class="pad"><kbd>↑</kbd><br><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span><span>bouger</span></div><div><kbd class="space">Espace</kbd><span>tout le reste</span></div></div>`:'';NET.keysShown=true;
  show(`<div class="card"><div class="deco">${L.course.toUpperCase()} · ${L.num}</div><h2>${L.name.toUpperCase()}</h2>
- <p class="big">${L.nouveau}</p>${keys}
+ <p class="big">${L.nouveau}</p><p class="small">Toi : <b>${roleOf(meI()?L.lmap:L.map)}</b> · Partenaire : <b>${roleOf(meI()?L.map:L.lmap)}</b></p>${keys}
  <div class="readies"><span id="rd0"></span><span id="rd1"></span></div>
  <button class="btn primary" data-act="ready" id="readyBtn">Prêt</button>${isHost()?'<button class="btn" data-act="menu">Menu</button>':''}</div>`);
  updReady();

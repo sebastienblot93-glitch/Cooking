@@ -23,17 +23,21 @@ Commandes, identiques pour les deux joueurs :
 - Poser un aliment prêt sur la pile d'assiettes : dresser l'assiette.
 - Échap : pause pour les deux joueurs. Une manette fonctionne aussi.
 
+## Principe
+
+Le miroir entre les deux cuisines est un **passe-plat** : on y pose un aliment, il apparaît de l'autre côté.
+Les deux cuisines n'ont pas les mêmes outils (ingrédients et couteau d'un côté, marmite, assiettes et cloche de service de l'autre) et **les commandes sont communes** : aucun plat ne sort sans les deux joueurs.
+Chaque ticket montre le chemin du plat en icônes (ingrédient → couteau → marmite…). Enchaîner les plats donne des bonus de série.
+
 ## Progression
 
 | Service | Nouveauté |
 |---|---|
-| Apéritif I — Le premier reflet | Couper, servir, planche reflet (tutoriel guidé, sans chrono) |
-| Apéritif II — Chaud et froid | Leviers qui allument le feu de l'autre cuisine |
-| Entrée I — Reflets cachés | Liens invisibles à découvrir, un piège |
-| Entrée II — Gestes du quotidien | Chrono, plats à deux ingrédients, liens dans le robinet et la poubelle |
-| Entrée III — Coup de feu | Tout à la fois : 8 liens cachés et des leurres |
-
-Bientôt : Plat (liens inversés), Fromage (liens à retardement), Dessert (passe-plat à travers le miroir), Digestif (le miroir se fissure).
+| Apéritif I — Le passe-plat | Soleil coupe, Lune dresse et sert (tutoriel guidé, sans chrono) |
+| Apéritif II — Soupe du jour | Une marmite chez Lune, attention à ne pas laisser brûler |
+| Entrée I — Donnant-donnant | Échanges dans les deux sens : Lune a les citrons, Soleil le couteau |
+| Entrée II — Chaud et froid | Chaque levier allume la machine de l'autre cuisine |
+| Entrée III — Coup de feu | Chrono, leviers cachés, un piège et un cadeau |
 
 ## Mettre en ligne sur Render
 
