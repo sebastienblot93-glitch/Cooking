@@ -174,14 +174,14 @@ const LEVELS=[
    ['Prends une tomate dans la caisse',K=>kitchenHas(K,'tomate_cru')||kitchenHas(K,'tomate_coupe')],
    ['Pose-la sur ta planche',K=>{const b=KH_(K,'C');return (b.item&&b.item.k==='tomate')||kitchenHas(K,'tomate_coupe');}],
    ['Reste appuyé pour couper',K=>kitchenHas(K,'tomate_coupe')],
-   ['Pose-la sur les assiettes',(K,p)=>plated(p)||K.served>0],
+   ['Pose-la sur la pile d’assiettes',(K,p)=>plated(p)||K.served>0],
    ['Sers à la passe dorée',K=>K.served>0],
-   ['Lune a besoin de toi : coupe sur ta planche !',K=>G.kitchens[1].served>0]
+   ['Lune a besoin de toi : coupe sur ta planche !',K=>G.kitchens[1].served>0||kitchenHas(G.kitchens[1],'fraise_coupe')]
   ],[
    ['Prends une fraise dans la caisse',K=>kitchenHas(K,'fraise_cru')||kitchenHas(K,'fraise_coupe')],
    ['Pose-la sur ta planche',K=>{const b=KH_(K,'R');return (b.item&&b.item.k==='fraise')||kitchenHas(K,'fraise_coupe');}],
    ['Pas de couteau… demande à Soleil de couper !',K=>kitchenHas(K,'fraise_coupe')],
-   ['Pose-la sur les assiettes',(K,p)=>plated(p)||K.served>0],
+   ['Pose-la sur la pile d’assiettes',(K,p)=>plated(p)||K.served>0],
    ['Sers à la passe dorée',K=>K.served>0]
   ]],
   links:[{f:[0,'C','chop'],t:[1,'R','chop'],label:'Couper sur la planche Soleil coupe aussi la planche reflet Lune'}]},
