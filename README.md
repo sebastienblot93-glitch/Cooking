@@ -58,3 +58,13 @@ Lancer en local : `node server.js`, puis ouvrir `http://localhost:3000` dans deu
 - `index.html` : le jeu (HTML, CSS et JavaScript dans un seul fichier, dessin sur canvas, sons générés par le navigateur).
 - `server.js` : le serveur de salles.
 - `render.yaml` : la configuration Render.
+
+## Tests
+
+`tests/suite.py` (Python + Playwright) lance le serveur, ouvre deux navigateurs séparés et fait jouer deux joueurs automatiques **uniquement au clavier** sur tous les services, puis vérifie les cas limites : code inconnu, salle pleine, lien partagé, pause, onglet caché, départ et retour d'un joueur, latence réseau simulée (~100 ms), tailles d'écran et débit.
+
+```
+pip install playwright && playwright install chromium
+python tests/suite.py          # tout
+python tests/suite.py edge     # cas limites seulement
+```

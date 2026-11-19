@@ -420,7 +420,7 @@ function interact(p,K){
 const rawChop=it=>it&&it.st==='cru'&&CHOP.has(it.k);
 function smartPress(p,K){
  const t=p.target;if(!t)return;
- if(t.type==='board'&&(rawChop(t.item)||(!t.item&&!p.held))){p.chopMode=true;p.chopTile=t;return;}
+ if(t.type==='board'&&(rawChop(t.item)||(!t.item&&!rawChop(p.held)))){p.chopMode=true;p.chopTile=t;return;}
  if(t.type==='mboard'&&rawChop(t.item)){say(p,'Pas de couteau ici : c’est l’autre cuisine qui coupe !');return;}
  if(MACH[t.type]&&!p.held&&!t.item){say(p,'L’interrupteur du '+MACH[t.type].name+' est de l’autre côté du miroir…');return;}
  interact(p,K);
@@ -532,6 +532,7 @@ function hintFor(p){
  const platePart=allTiles(K,t=>t.type==='counter'&&t.item&&t.item.k==='assiette'&&t.item.c.length&&K.orders.some(q=>sameMulti(t.item.c,RECIPES[q.r].items)))[0];if(platePart)return platePart;
  const ruined=allTiles(K,t=>MACH[t.type]&&t.item&&t.item.k===MACH[t.type].ruin)[0];if(ruined)return ruined;
  const ch=allTiles(K,t=>t.type==='board'&&rawChop(t.item))[0];if(ch)return ch;
+ const rawC=nearestT(p,allTiles(K,t=>t.type==='counter'&&rawChop(t.item)&&need.some(n=>baseOf(n)===t.item.k)));if(rawC)return rawC;
  if(allTiles(K,t=>MACH[t.type]&&t.item&&t.item.k===MACH[t.type].out).length)return nearestT(p,allTiles(K,t=>t.type==='plates'));
  const ready=nearestT(p,allTiles(K,t=>t.item&&t.item.k!=='assiette'&&t.type!=='stove'&&t.type!=='freezer'&&need.includes(key(t.item))));if(ready)return ready;
  const machIn=allTiles(K,t=>(t.type==='counter'||t.type==='board'||t.type==='mboard')&&t.item&&t.item.st==='coupe'&&allTiles(K,m=>MACH[m.type]&&key(t.item)===MACH[m.type].input&&!m.item).length&&need.some(n=>BASE[n]===t.item.k))[0];if(machIn)return machIn;
@@ -1139,7 +1140,8 @@ function frame(now){
 }
 startLevel(0);titleScreen();updBar();renderCarnet();
 requestAnimationFrame(frame);
-window.__cm={get G(){return G},get state(){return state},NET,startLevel,go,LEVELS,interact,smartPress,chopAction,update,briefScreen,hintFor,joinRoom,createRoom};
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='play')pauseGame();});
+window.__cm={get G(){return G},get state(){return state},NET,OPTS,startLevel,go,LEVELS,interact,smartPress,chopAction,update,briefScreen,hintFor,joinRoom,createRoom};
 })();
 </script>
 </body>
