@@ -39,7 +39,9 @@ Pour tester tous les niveaux sans les débloquer : ajouter `?tout` à l'adresse 
 
 ## Technique
 
-- Rendu 3D maison en **WebGL2**, sans aucune bibliothèque : ombres portées, lumière douce, objets modélisés à partir de formes simples.
+- Rendu 3D maison en **WebGL2**, sans aucune bibliothèque : ombres portées, éclairage façon dessin animé (ombres teintées, reflets nets, liseré de lumière), contours sombres autour des personnages et des aliments.
+- Modèles sculptés par code dans `src/models.js` (surfaces de révolution, surfaces paramétriques, couleurs et brillance par sommet) : tomate côtelée, laitue en feuilles, oignon strié, pain au sésame, steak marbré ou grillé, bols de soupe, burgers montés, et cinq chefs animaux (ours, chat, lapin, grenouille, panda) aux couleurs de chaque joueur.
+- Les icônes des tickets, des bulles et les portraits sont des rendus des modèles 3D.
 - Le code source est dans `src/` ; `python build.py` reconstruit `index.html`.
 - Les niveaux sont des plans en texte dans `src/game.js` (la légende des symboles est en tête du fichier) : ajouter un niveau revient à dessiner un nouveau plan.
 - `server.js` (Node, sans dépendance) sert le jeu et relie les deux joueurs d'une salle (code de 4 lettres).

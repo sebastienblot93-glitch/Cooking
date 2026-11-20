@@ -1,12 +1,5 @@
 // ================= SCÈNE 3D =================
 const PCOL=['#e8603c','#2a9d9f'],PNAME=['Soleil','Lune'];
-const SKINS=[
- {id:'brioche',nom:'Brioche',body:'#f0b866',hat:'toque'},
- {id:'piment',nom:'Piment',body:'#e2463a',hat:'stem'},
- {id:'mochi',nom:'Mochi',body:'#f4eef8',hat:'toque'},
- {id:'radis',nom:'Radis',body:'#ec6b93',hat:'leaves'},
- {id:'champi',nom:'Champi',body:'#f1e3c9',hat:'cap'}
-];
 const Mx=(x,y,z,ry,rx,rz)=>M4.trs(x,y,z,ry||0,1,rx||0,rz||0);
 function rbox(P,w,h,d,lx,ly,lz,col,o){o=o||{};put(geoRoundBox(w,h,d,o.r===undefined?.04:o.r,o.N||4),M4.mul(P,Mx(lx,ly+h/2,lz,o.ry,o.rx,o.rz)),col,o);}
 function ell(P,rx,ry,rz,lx,ly,lz,col,o){o=o||{};put(geoEllipsoid(rx,ry,rz,o.seg||14),M4.mul(P,Mx(lx,ly,lz,o.ry,o.rx,o.rz)),col,o);}
@@ -15,35 +8,11 @@ function torus(P,R,r,lx,ly,lz,col,o){o=o||{};put(geoTorus(R,r,o.seg||24,8),M4.mu
 const ID=M4.ident();
 
 // ---------- objets ----------
-function tomato3(P,y,s){s=s||1;ell(P,.15*s,.13*s,.15*s,0,y+.13*s,0,'#e2382a',{gloss:.6});for(let i=0;i<5;i++){const a=i/5*Math.PI*2;ell(P,.07*s,.015*s,.03*s,Math.cos(a)*.05*s,y+.255*s,Math.sin(a)*.05*s,'#3c9a3a',{ry:-a});}cyl(P,.015*s,.015*s,.05*s,0,y+.25*s,0,'#2f7a2c');}
-function tomatoCut3(P,y,s){s=s||1;for(const [dx,dz,a] of [[-.08,.02,.3],[.07,.05,-.2],[0,-.07,.1]]){cyl(P,.1*s,.1*s,.035*s,dx*s,y,dz*s,'#d22f22',{rx:a*.4});cyl(P,.078*s,.078*s,.04*s,dx*s,y+.002,dz*s,'#f4836b',{rx:a*.4});}}
-function lettuce3(P,y,s){s=s||1;ell(P,.19*s,.14*s,.19*s,0,y+.13*s,0,'#3f9a3a',{gloss:.3});for(let i=0;i<5;i++){const a=i/5*Math.PI*2;ell(P,.11*s,.1*s,.11*s,Math.cos(a)*.1*s,y+.15*s,Math.sin(a)*.1*s,'#79c95a');}ell(P,.09*s,.08*s,.09*s,0,y+.24*s,0,'#b7e68c');}
-function lettuceCut3(P,y,s){s=s||1;for(let i=0;i<7;i++){const a=i*1.7;rbox(P,.14*s,.03*s,.06*s,Math.cos(a)*.09*s,y+(i%3)*.012,Math.sin(a*1.3)*.08*s,i%2?'#5fae45':'#a6dd7c',{ry:a,r:.012});}}
-function onion3(P,y,s){s=s||1;ell(P,.15*s,.14*s,.15*s,0,y+.14*s,0,'#e3a64e',{gloss:.6});for(let i=0;i<4;i++){const a=i/4*Math.PI;ell(P,.152*s,.12*s,.03*s,0,y+.14*s,0,'#c98a3a',{ry:a,a:.55});}cyl(P,.05*s,.012*s,.1*s,0,y+.25*s,0,'#b9772f');for(let i=0;i<3;i++)rbox(P,.012*s,.04*s,.012*s,(i-1)*.025*s,y-.005,0,'#6b4a2a',{r:.004});}
-function onionCut3(P,y,s){s=s||1;for(const [dx,dz,R] of [[-.07,.03,.08],[.07,.05,.07],[0,-.07,.075]]){torus(P,R*s,.018*s,dx*s,y+.02,dz*s,'#f6ecd2',{seg:16});torus(P,R*.55*s,.016*s,dx*s,y+.02,dz*s,'#ead7a8',{seg:14});}}
-function bunTop3(P,y,s){s=s||1;ell(P,.165*s,.1*s,.165*s,0,y,0,'#e39a48',{gloss:.55});for(let i=0;i<7;i++){const a=i*2.4,r=(.04+(i%3)*.035)*s;ell(P,.014*s,.007*s,.022*s,Math.cos(a)*r,y+.085*s-(r*r*1.4),Math.sin(a)*r,'#fff6dc',{ry:a});}}
-function pain3(P,y,s){s=s||1;cyl(P,.15*s,.155*s,.05*s,0,y,0,'#f0c27a',{gloss:.2});bunTop3(P,y+.055*s,s);}
-function steak3(P,y,st,s){s=s||1;const col=st==='cru'?'#d45f62':st==='cuit'?'#7d4528':'#2b1b14';
- ell(P,.17*s,.045*s,.15*s,0,y+.045*s,0,col,{gloss:st==='cru'?.6:.3});if(st==='cru')for(const [dx,dz] of [[-.05,.03],[.06,-.02],[0,.07]])ell(P,.03*s,.01*s,.02*s,dx*s,y+.085*s,dz*s,'#f4c4c0');
- if(st==='cuit')for(const i of [-1,0,1])rbox(P,.22*s,.008,.022*s,0,y+.083*s,i*.06*s,'#3e1e0e',{ry:.5,r:.004,noShadow:true});}
-function burger3(P,y,c){let h=y;const bun=c.includes('pain');
- if(bun){cyl(P,.15,.155,.05,0,h,0,'#f0c27a');h+=.05;}
- if(c.includes('steak_cuit')){steak3(P,h-.01,'cuit',1);h+=.075;}
- if(c.includes('laitue_coupe')){ell(P,.18,.018,.17,0,h+.01,0,'#6fbe4f',{gloss:.3});ell(P,.15,.016,.15,.02,h+.02,-.02,'#9ad96f');h+=.035;}
- if(c.includes('tomate_coupe')){for(const [dx,dz] of [[-.06,0],[.06,.02]]){cyl(P,.075,.075,.025,dx,h,dz,'#d8352a',{gloss:.4});cyl(P,.058,.058,.027,dx,h,dz,'#f4836b');}h+=.03;}
- if(bun)bunTop3(P,h+.02,1);}
-function plate3(P,y,dirty){cyl(P,.25,.21,.035,0,y,0,dirty?'#d8ccb8':'#f7f5f0',{seg:24,gloss:.5});torus(P,.215,.018,0,y+.035,0,dirty?'#cfc2ab':'#ffffff',{seg:24});if(dirty){cyl(P,.08,.08,.04,.05,y+.005,-.04,'#9a6a3a');cyl(P,.05,.05,.04,-.07,y+.005,.06,'#c0502e');}}
-function plateFull3(P,y,c){plate3(P,y);const top=y+.04,sp=c.find(x=>SOUPS.has(x));
- if(c.includes('pain')||c.includes('steak_cuit')){burger3(P,top,c);return;}
- if(sp){const on=sp==='soupe_oignon';cyl(P,.16,.13,.07,0,top,0,'#ffffff',{gloss:.4});cyl(P,.135,.135,.072,0,top+.002,0,on?'#c4893a':'#e5652e',{gloss:.3});for(let i=0;i<3;i++)rbox(P,.045,.03,.045,Math.cos(i*2.1)*.06,top+.06,Math.sin(i*2.1)*.06,on?'#f6d58a':'#f2c46a',{r:.01});if(on)ell(P,.06,.012,.05,-.02,top+.075,.02,'#fff1c4');else ell(P,.025,.01,.04,.05,top+.08,-.03,'#3c9a3a');}
- else{if(c.includes('laitue_coupe'))lettuceCut3(Mx2(P,0,0,0,1),top,.95);if(c.includes('tomate_coupe'))tomatoCut3(Mx2(P,0,0,0,1),top+(c.includes('laitue_coupe')?.04:0),.8);}
-}
+const OLI=.009,WH='#ffffff';
+const ITEMK={tomate_cru:'tomate',tomate_coupe:'tomate_coupe',laitue_cru:'laitue',laitue_coupe:'laitue_coupe',oignon_cru:'oignon',oignon_coupe:'oignon_coupe',pain:'pain',steak_cru:'steak_cru',steak_cuit:'steak_cuit',steak_brule:'steak_brule',extincteur:'extincteur'};
+function item3(it,P,y,s){if(!it)return;if(it.k==='sales'){dirtyStack3(P,y,it.n);return;}const g=it.k==='assiette'?dishModel(it.c):MODELS[ITEMK[key(it)]];if(!g)return;put(g,M4.mul(P,TM(0,y,0,{s:s||1})),WH,{ol:it.k==='laitue'?.005:OLI});}
+function dirtyStack3(P,y,n){const g=MODELS.assiette_sale;for(let i=0;i<Math.min(n,6);i++)put(g,M4.mul(P,TM((i%2)*.015,y+i*.032,0,{ry:i})),WH,{ol:OLI});}
 const Mx2=(P,x,y,z,ry)=>M4.mul(P,Mx(x,y,z,ry));
-function dirtyStack3(P,y,n){for(let i=0;i<Math.min(n,6);i++)plate3(Mx2(P,(i%2)*.02,0,0,i),y+i*.045,true);}
-function ext3(P,y){cyl(P,.09,.09,.42,0,y,0,'#d8302a',{gloss:.7});ell(P,.09,.05,.09,0,y+.42,0,'#d8302a',{gloss:.7});cyl(P,.03,.03,.08,0,y+.45,0,'#222');rbox(P,.16,.03,.04,.06,y+.5,0,'#222',{r:.01});cyl(P,.02,.02,.2,-.1,y+.35,0,'#333',{rz:.6});rbox(P,.12,.06,.002,0,y+.18,.09,'#ffffff',{r:.005});}
-function item3(it,P,y){if(!it)return;const k=key(it);
- if(k==='tomate_cru')tomato3(P,y);else if(k==='tomate_coupe')tomatoCut3(P,y+.02);else if(k==='laitue_cru')lettuce3(P,y);else if(k==='oignon_cru')onion3(P,y);else if(k==='pain')pain3(P,y);else if(it.k==='steak')steak3(P,y,it.st);else if(k==='oignon_coupe')onionCut3(P,y);else if(k==='laitue_coupe')lettuceCut3(P,y);
- else if(it.k==='assiette')plateFull3(P,y,it.c);else if(it.k==='sales')dirtyStack3(P,y,it.n);else if(it.k==='extincteur')ext3(P,y);}
 
 // ---------- souris ----------
 function mouse3(m,time){const run=Math.sin(m.t*28),P=M4.trs(m.x,Math.abs(run)*.03,m.z,m.a,1.5);
@@ -55,28 +24,22 @@ function mouse3(m,time){const run=Math.sin(m.t*28),P=M4.trs(m.x,Math.abs(run)*.0
 
 // ---------- personnages ----------
 function chef3(p,time){
- const S=SKINS[p.skin]||SKINS[0],ang=Math.atan2(p.dir.x,p.dir.z),ph=Math.sin(p.walk),bob=Math.abs(ph)*.05+(p.moving?0:Math.sin(time*3+p.i)*.012),lean=p.dash>0?.25:(p.moving?.08:0);
+ const si=SKINS[p.skin]?p.skin:0,ang=Math.atan2(p.dir.x,p.dir.z),mv=p.moving,OL=.013;
  let sink=0;if(p.dead>0){const k=DEADT-p.dead;if(k>.8)return;sink=k*1.4;}
+ const ph=Math.sin(p.walk),bob=Math.abs(ph)*.045+(mv?0:Math.sin(time*3+p.i)*.01),lean=p.dash>0?.28:(mv?.1:0),sq=mv?Math.abs(Math.cos(p.walk))*.035:Math.sin(time*3+p.i)*.012;
  const P=M4.mul(M4.trs(p.x,-sink,p.z,ang,1.22),Mx(0,0,0,0,lean));
- for(const sd of [-1,1]){const sw=p.moving?Math.sin(p.walk+(sd>0?Math.PI:0))*.1:0;ell(P,.09,.065,.13,sd*.13,.06+Math.max(0,sw)*.4,sw,'#3a2a22',{gloss:.2});}
- const B=M4.mul(P,Mx(0,bob,0));
- ell(B,.31,.36,.29,0,.5,0,S.body,{gloss:.25,seg:20});
- ell(B,.23,.25,.09,0,.4,.215,PCOL[p.i],{seg:16});ell(B,.09,.06,.03,0,.47,.29,'#ffffff',{a:.35});
- rbox(B,.06,.12,.02,-.18,.52,.2,PCOL[p.i],{rz:.5,r:.01});rbox(B,.06,.12,.02,.18,.52,.2,PCOL[p.i],{rz:-.5,r:.01});
- // visage
- const blink=(Math.sin(time*1.7+p.i*3)>.985);
- for(const sd of [-1,1]){if(blink)rbox(B,.07,.012,.02,sd*.1,.64,.265,'#1d120d',{r:.005});else{ell(B,.045,.06,.03,sd*.1,.64,.262,'#1d120d',{gloss:.8});ell(B,.016,.016,.01,sd*.1-.012,.665,.29,'#ffffff');}
-  ell(B,.05,.028,.02,sd*.18,.56,.245,'#ff8a9a',{a:.75});}
- rbox(B,.07,.02,.02,0,.56,.275,'#6a2a20',{r:.008});
- // chapeau
- if(S.hat==='toque'){cyl(B,.17,.17,.15,0,.82,0,'#ffffff');ell(B,.23,.13,.23,0,1.0,0,'#ffffff',{gloss:.2});ell(B,.15,.1,.15,.08,1.06,-.04,'#ffffff');}
- else if(S.hat==='cap'){ell(B,.4,.17,.4,0,.86,0,'#d4432f',{gloss:.4,seg:20});for(const [dx,dz,r] of [[-.18,.12,.06],[.12,-.15,.07],[.2,.15,.05],[-.05,-.02,.05]])ell(B,r,r*.5,r,dx,.98,dz,'#fff6ea');}
- else if(S.hat==='stem'){cyl(B,.04,.06,.2,0,.82,0,'#3f8f3a',{rz:.4});ell(B,.14,.04,.14,0,.84,0,'#3f8f3a');}
- else if(S.hat==='leaves'){for(const a of [-.5,0,.5])ell(B,.07,.2,.04,Math.sin(a)*.08,1.0,0,'#4f9e3f',{rz:a});cyl(B,.12,.12,.06,0,.82,0,'#ffffff');}
- // mains + objet tenu
- const chop=p.chopping?Math.abs(Math.sin(time*16))*.12:0,spray=p.spraying?Math.sin(time*30)*.01:0;
- if(p.held){for(const sd of [-1,1])ell(B,.085,.085,.085,sd*.22,.52-(sd<0?chop:0),.3+spray,S.body,{gloss:.3});item3(p.held,M4.mul(B,Mx(0,0,.44)),p.held.k==='extincteur'?.32:.52);}
- else{for(const sd of [-1,1]){const sw=p.moving?Math.sin(p.walk+(sd>0?0:Math.PI))*.12:0;ell(B,.085,.085,.085,sd*.34,.42-(sd<0?chop:0)+(p.chopping?.12:0),sw+(p.chopping?.22:0),S.body,{gloss:.3});}}
+ for(const sd of [-1,1]){const sw=mv?Math.sin(p.walk+(sd>0?Math.PI:0))*.11:0;put(MODELS.pied,M4.mul(P,TM(sd*.1,Math.max(0,sw)*.25,sw)),WH,{ol:OL});}
+ const B=M4.mul(P,TM(0,bob,0,{sx:1+sq*.6,sy:1-sq,sz:1+sq*.6}));
+ put(chefBody(si,p.i),B,WH,{ol:OL});
+ const nod=p.chopping?Math.abs(Math.sin(time*16))*.07:0,tilt=mv?Math.sin(p.walk)*.05:Math.sin(time*1.3+p.i)*.05;
+ const H=M4.mul(B,TM(0,.77,0,{rz:tilt,rx:nod}));
+ put(chefHead(si),H,WH,{ol:OL});
+ const blink=Math.sin(time*1.7+p.i*3)>.985,E=chefEyePos(si),eye=chefEye(si);
+ for(const sd of [-1,1])put(eye,M4.mul(H,TM(sd*E[0],E[1],E[2],{ry:sd*E[3],sy:blink?.12:1})),WH,{ol:blink?0:.005});
+ const hp=hatPos(si);put(MODELS.toque,M4.mul(H,TM(hp[0],hp[1],hp[2],{rx:hp[3]})),WH,{ol:OL});
+ const hand=chefHand(si),chop=p.chopping?Math.abs(Math.sin(time*16))*.12:0,spray=p.spraying?Math.sin(time*30)*.01:0;
+ if(p.held){for(const sd of [-1,1])put(hand,M4.mul(B,TM(sd*.19,.5-(sd<0?chop:0),.26+spray)),WH,{ol:OL});item3(p.held,M4.mul(B,TM(0,0,.3)),p.held.k==='extincteur'?.36:.55);}
+ else for(const sd of [-1,1]){const sw=mv?Math.sin(p.walk+(sd>0?0:Math.PI))*.1:0;put(hand,M4.mul(B,TM(sd*.29,.3-(sd<0?chop:0)+(p.chopping?.14:0),sw+(p.chopping?.2:0))),WH,{ol:OL});}
 }
 
 // ---------- cuisine ----------
@@ -103,19 +66,17 @@ function drawTile(t,P,time,th){
  const top=CH;
  switch(t.type){
   case 'counter':counterBody(t,P,th.body,th.top);if(t.ch==='E'&&!t.item){rbox(P,.3,.02,.3,0,top,0,'#c0392b',{r:.01,a:.5});}item3(t.item,P,top);break;
-  case 'crate':{counterBody(t,P,'#9a6236','#b9834f');const c='#c58a52';rbox(P,.8,.3,.06,0,top,.37,c,{r:.02});rbox(P,.8,.3,.06,0,top,-.37,c,{r:.02});rbox(P,.06,.3,.8,.37,top,0,c,{r:.02});rbox(P,.06,.3,.8,-.37,top,0,c,{r:.02});
-   for(const [dx,dz] of [[-.17,-.15],[.16,-.12],[-.12,.15],[.17,.16],[0,0]]){const Q=Mx2(P,dx,0,dz,dx*7);if(t.ing==='tomate')tomato3(Q,top+.06,.9);else if(t.ing==='oignon')onion3(Q,top+.05,.85);else if(t.ing==='pain')pain3(Q,top+.03,.8);else if(t.ing==='steak')steak3(Q,top+.03,'cru',.85);else lettuce3(Q,top+.04,.75);}
-   rbox(P,.36,.2,.02,0,top-.42,.5,'#fff3d6',{r:.02});if(t.ing==='tomate')ell(P,.07,.06,.02,0,top-.32,.515,'#e2382a');else if(t.ing==='oignon')ell(P,.07,.065,.02,0,top-.32,.515,'#e3a64e');else if(t.ing==='pain')ell(P,.08,.055,.02,0,top-.32,.515,'#e39a48');else if(t.ing==='steak')ell(P,.08,.05,.02,0,top-.32,.515,'#d45f62');else ell(P,.08,.06,.02,0,top-.32,.515,'#58b13f');break;}
-  case 'board':{counterBody(t,P,th.body,th.top);rbox(P,.66,.05,.46,0,top,0,'#dba36a',{r:.03,gloss:.2});
+  case 'crate':{counterBody(t,P,'#9a6236','#b9834f');put(crateModel(t.ing),M4.mul(P,TM(0,top,0)),WH,{ol:.008});
+   rbox(P,.36,.2,.02,0,top-.42,.5,'#fff3d6',{r:.02});const g=MODELS[ITEMK[t.ing+(t.ing==='pain'?'':'_cru')]];if(g)put(g,M4.mul(P,TM(0,top-.4,.52,{rx:Math.PI/2,s:.45})),WH);break;}
+  case 'board':{counterBody(t,P,th.body,th.top);put(MODELS.planche,M4.mul(P,TM(0,top+.025,0)),WH,{ol:.007});
    const chopping=G.players.some(p=>p.chopping&&p.workTile===t),k=chopping?Math.abs(Math.sin(time*16))*.12:0;
-   rbox(P,.05,.02,.32,.27,top+.06+k,.0,'#dfe5ec',{gloss:1,r:.008,ry:.2,rx:chopping?-.4:0});rbox(P,.05,.04,.12,.3,top+.06+k,.21,'#3b2a20',{r:.01,ry:.2});
+   put(MODELS.couteau,M4.mul(P,TM(.24,top+.065+k,.02,{ry:-1.35,rz:chopping?.4:0})),WH,{ol:.006});
    item3(t.item,P,top+.05);break;}
   case 'stove':{counterBody(t,P,'#4a4f58','#6f7782');torus(P,.26,.025,0,top+.01,0,'#2a2d33');
    const pot=t.pot,cooking=pot.c.length&&!pot.done&&!pot.burnt;if(cooking||pot.done)for(let i=0;i<10;i++){const a=i/10*Math.PI*2+time;ell(P,.03,.045,.03,Math.cos(a)*.24,top+.04,Math.sin(a)*.24,'#3d8bff',{e:'#3d8bff',a:.8,noShadow:true});}
-   cyl(P,.29,.26,.26,0,top+.02,0,'#b9c1cb',{gloss:.9,seg:24,open:true,ds:true});cyl(P,.26,.26,.01,0,top+.03,0,'#2b2f35');torus(P,.285,.03,0,top+.28,0,'#dfe4ea',{seg:24});cyl(P,.25,.25,.005,0,top+.06,0,'#2b2f35');rbox(P,.12,.04,.06,.33,top+.2,0,'#2a2d33',{r:.015});rbox(P,.12,.04,.06,-.33,top+.2,0,'#2a2d33',{r:.015});
-   if(!pot.c.length&&!pot.burnt)cyl(P,.25,.25,.01,0,top+.1,0,'#3a3f46');
-   if(pot.c.length||pot.burnt){const on=pot.c[0]==='oignon',lvl=top+.1+Math.min(3,pot.c.length||3)*.05,col=pot.burnt?'#2a201c':pot.done?(on?'#c4893a':'#e5652e'):(on?'#e2c27a':'#d8503a');cyl(P,.25,.25,.02,0,lvl,0,col,{gloss:.5});
-    if(!pot.done&&!pot.burnt)for(let i=0;i<pot.c.length;i++)(on?onionCut3:tomatoCut3)(Mx2(P,Math.cos(i*2.1)*.1,0,Math.sin(i*2.1)*.1,i),lvl+.02,.6);
+   put(MODELS.marmite,M4.mul(P,TM(0,top+.012,0)),WH,{ol:.008});
+   if(pot.c.length||pot.burnt){const on=pot.c[0]==='oignon',lvl=top+.07+Math.min(3,pot.c.length||3)*.05,col=pot.burnt?'#2a201c':pot.done?(on?'#c4893a':'#e5652e'):(on?'#e2c27a':'#d8503a');cyl(P,.255,.255,.02,0,lvl,0,col,{gloss:.6,seg:32});
+    if(!pot.done&&!pot.burnt)for(let i=0;i<pot.c.length;i++)put(MODELS[on?'oignon_coupe':'tomate_coupe'],M4.mul(P,TM(Math.cos(i*2.1)*.1,lvl+.005,Math.sin(i*2.1)*.1,{ry:i,s:.6})),WH);
     if(pot.done||cooking)for(let i=0;i<3;i++){const ph=(time*1.3+i/3)%1;ell(P,.03+ph*.03,.03+ph*.03,.03+ph*.03,Math.cos(i*2)*.1,lvl+.03,Math.sin(i*2)*.1,on?'#f6e0a8':'#ffb59a',{a:1-ph,noShadow:true});}}
    if(t.fire>0)fire3(P,top+.2,time,t.fire);break;}
   case 'sink':{counterBody(t,P,th.body,'#c9d3dc',true);const st='#c9d3dc';rbox(P,1.0,.08,.16,0,top-.08,.42,st,{r:.03,gloss:.8});rbox(P,1.0,.08,.16,0,top-.08,-.42,st,{r:.03,gloss:.8});rbox(P,.16,.08,1.0,.42,top-.08,0,st,{r:.03,gloss:.8});rbox(P,.16,.08,1.0,-.42,top-.08,0,st,{r:.03,gloss:.8});
@@ -125,7 +86,7 @@ function drawTile(t,P,time,th){
    if(t.dirty>0)dirtyStack3(Mx2(P,.05,0,.05,.3),top-.06,t.dirty);
    const washing=G.players.some(p=>p.chopping&&p.workTile===t);if(washing)for(let i=0;i<6;i++){const a=time*4+i;ell(P,.05,.05,.05,Math.cos(a)*.18,top+.06+Math.abs(Math.sin(a*2))*.05,Math.sin(a)*.15,'#ffffff',{a:.7,noShadow:true});}
    break;}
-  case 'rack':{counterBody(t,P,th.body,th.top);rbox(P,.7,.04,.6,0,top,0,'#8a5a36',{r:.02});for(let i=0;i<Math.min(t.cnt,8);i++)plate3(P,top+.04+i*.045);break;}
+  case 'rack':{counterBody(t,P,th.body,th.top);rbox(P,.7,.04,.6,0,top,0,'#8a5a36',{r:.02});for(let i=0;i<Math.min(t.cnt,8);i++)put(MODELS.assiette,M4.mul(P,TM(0,top+.04+i*.03,0,{ry:i*.7})),WH,{ol:OLI});break;}
   case 'dirty':{counterBody(t,P,'#6b7380','#8f98a5');rbox(P,.7,.04,.6,0,top,0,'#5b6370',{r:.02});dirtyStack3(P,top+.04,t.cnt);break;}
   case 'serve':{rbox(P,.98,CH-.07,.98,0,0,0,'#c0392b',{r:.05});rbox(P,1.0,.08,1.0,0,CH-.08,0,'#f2c14e',{r:.035,gloss:.6});rbox(P,.8,.03,.86,0,top-.01,0,'#1d1d24',{r:.02});
    for(let i=0;i<5;i++){const z=((time*.6+i/5)%1)*.8-.4;rbox(P,.74,.02,.08,0,top+.02,z,'#3b3b46',{r:.01});}
@@ -139,9 +100,8 @@ function drawTile(t,P,time,th){
    if(t.item){const off=t.bp-.5;item3(t.item,M4.mul(P,Mx(dx*off,0,dz*off)),top);}break;}
   case 'pan':{counterBody(t,P,'#4a4f58','#6f7782');torus(P,.26,.025,0,top+.01,0,'#2a2d33');const pn=t.pan,it=pn.it,on=it&&it.st!=='brule'&&!(t.fire>0);
    if(on)for(let i=0;i<10;i++){const a=i/10*Math.PI*2+time;ell(P,.03,.045,.03,Math.cos(a)*.24,top+.04,Math.sin(a)*.24,'#3d8bff',{e:'#3d8bff',a:.8,noShadow:true});}
-   cyl(P,.3,.26,.07,0,top+.03,0,'#2c2f36',{gloss:.7,seg:24});cyl(P,.27,.27,.005,0,top+.1,0,'#3a3e46',{gloss:.9});torus(P,.29,.02,0,top+.1,0,'#3e434c',{seg:24});
-   rbox(P,.36,.04,.07,.46,top+.07,0,'#2a2016',{r:.02,rz:-.12});
-   if(it){const jig=it.st==='cru'||it.st==='cuit'?Math.sin(time*30)*.004:0;steak3(P,top+.1+jig,it.st,1);}
+   put(MODELS.poele,M4.mul(P,TM(0,top+.012,0)),WH,{ol:.008});
+   if(it){const jig=it.st==='cru'||it.st==='cuit'?Math.sin(time*30)*.004:0;item3(it,P,top+.034+jig);if(on&&Math.sin(time*3)>.2)ell(P,.04,.04,.04,Math.sin(time*5)*.08,top+.14+((time*.8)%1)*.2,.03,'#ffffff',{a:.35,noShadow:true});}
    break;}
   case 'hole':{counterBody(t,P,th.body,th.top);const f=NB.find(([dx,dz])=>{const n=T(t.x+dx,t.z+dz);return n&&n.type==='floor';})||[0,1],Q=M4.mul(P,Mx(0,0,0,Math.atan2(f[0],f[1])));
    ell(Q,.2,.2,.04,0,0,.49,'#120c10',{noShadow:true});ell(Q,.23,.23,.03,0,0,.485,shade3(th.body,-.35));rbox(Q,.12,.06,.1,.32,top,.15,'#f6d04a',{r:.02,rz:.2});break;}
@@ -180,8 +140,7 @@ function fire3(P,y,time,f){for(let i=0;i<7;i++){const a=i*.9+time*2,r=.1+.06*Mat
 // ---------- caméra et image ----------
 let CAM=null;
 function camFor(W,H,asp){const cx=W/2,cz=H/2+.35,need=Math.max(W*1.08/asp,H*1.22);const dist=need/(2*Math.tan(.36))*1.0;
- return {fov:.72*1.0,eye:[cx,dist*.8,cz+dist*.7],at:[cx,0,cz+.35],light:normalize3([-.42,-1,-.38]),shR:Math.max(W,H)*.82,bg:hex3('#2b2638')};}
-function normalize3(v){const l=Math.hypot(...v);return v.map(x=>x/l);}
+ return {fov:.72*1.0,eye:[cx,dist*.76,cz+dist*.75],at:[cx,0,cz+.3],light:normalize3([-.42,-1,-.38]),shR:Math.max(W,H)*.82,bg:hex3('#2b2638')};}
 function render3D(time){
  if(!G||!R3.ready)return;
  const cv=document.getElementById('gl'),W=cv.width,H=cv.height;CAM=camFor(G.W,G.H,W/H);

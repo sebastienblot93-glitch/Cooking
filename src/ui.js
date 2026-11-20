@@ -200,4 +200,4 @@ function frame(now){
 }
 function initGL(){if(R3.tried)return;R3.tried=true;try{if(!r3Init(document.getElementById('gl')))show(`<div class="card"><h2>3D indisponible</h2><p class="small">Ton navigateur ne gère pas WebGL2. Essaie Chrome, Firefox ou Edge à jour.</p></div>`);}catch(e){console.error(e);}}
 resize();startLevel(0);titleScreen();updBar();requestAnimationFrame(frame);
-window.__cm={darkF,R3,get G(){return G},get state(){return state},NET,startLevel,go,LEVELS,press,planFor,briefScreen,update,botSafe,bridgeF,camFor};
+window.__cm={darkF,R3,dbg:{r3Snapshot,item3,chef3,put,MODELS,TM,makeIcon,iconImg,initGL},get G(){return G},get state(){return state},NET,startLevel,go,LEVELS,press,planFor,briefScreen,update,botSafe,bridgeF,camFor};
