@@ -59,6 +59,7 @@ async def play_level(A, B, i, timeout, shorten=None):
         return None
     if shorten:
         await A.evaluate(f'()=>{{window.__cm.G.time={shorten};}}')
+    await A.evaluate('()=>{window.__idle=[0,0,0];clearInterval(window.__idleT);window.__idleT=setInterval(()=>{const G=window.__cm.G;if(window.__cm.state!=="play")return;window.__idle[2]++;G.players.forEach((p,i)=>{if(!p.hint&&!p.chopping&&!p.held)window.__idle[i]++;});},250);}')
     await A.evaluate('()=>window.__bot.start()'); await B.evaluate('()=>window.__bot.start()')
     t0 = time.time()
     while time.time() - t0 < timeout:
@@ -68,6 +69,8 @@ async def play_level(A, B, i, timeout, shorten=None):
     await A.evaluate('()=>window.__bot.stop()'); await B.evaluate('()=>window.__bot.stop()')
     info = await A.evaluate('''()=>{const G=window.__cm.G;return {tot:G.served,lost:G.lost,served:G.kitchens.map(K=>K.served),score:G.score,el:Math.round(G.elapsed),found:G.links.filter(l=>l.found).length,total:G.links.length,state:window.__cm.state}}''')
     info['guest_state'] = await state(B)
+    idl = await A.evaluate('()=>window.__idle')
+    info['attente_soleil_%'] = round(100*idl[0]/max(1,idl[2])); info['attente_lune_%'] = round(100*idl[1]/max(1,idl[2]))
     info['secs'] = round(time.time() - t0)
     return info
 

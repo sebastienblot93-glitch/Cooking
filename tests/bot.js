@@ -39,7 +39,7 @@ window.__bot=(()=>{
    kd(dx>0?'ArrowRight':dx<0?'ArrowLeft':dy>0?'ArrowDown':'ArrowUp');return;
   }
   releaseMoves();
-  const chop=t.type==='board'&&((t.item&&t.item.st==='cru')||(!t.item&&!(p.held&&p.held.st==='cru')));
+  const chop=(t.type==='wash'&&t.dirty>0)||(t.type==='board'&&((t.item&&t.item.st==='cru')||(!t.item&&!(p.held&&p.held.st==='cru'))));
   if(chop){kd('Space');return;}
   ku('Space');const now=performance.now();
   if(now-st.lastAct>380){st.lastAct=now;tap('Space');st.acts++;if(explore)st.explore.shift();}

@@ -25,17 +25,19 @@ Commandes, identiques pour les deux joueurs :
 
 ## Principe
 
-Le miroir entre les deux cuisines est un **passe-plat** : on y pose un aliment, il apparaît de l'autre côté.
-Les deux cuisines n'ont pas les mêmes outils (ingrédients et couteau d'un côté, marmite, assiettes et cloche de service de l'autre) et **les commandes sont communes** : aucun plat ne sort sans les deux joueurs.
-Chaque ticket montre le chemin du plat en icônes (ingrédient → couteau → marmite…). Enchaîner les plats donne des bonus de série.
+Le miroir entre les deux cuisines est un **passe-plat** : on y pose un aliment, il apparaît de l'autre côté et y reste jusqu'à ce qu'on le prenne.
+Les deux cuisines n'ont pas les mêmes outils et **les commandes sont communes** : aucun plat ne sort sans les deux joueurs.
+Chacun a toujours quelque chose à faire : Soleil prépare (et prend de l'avance), Lune garnit, dresse, sert et fait la **plonge** (les assiettes propres sont limitées, chaque plat servi revient sale à l'évier).
+Chaque ticket montre le chemin du plat en icônes. Enchaîner les plats donne des bonus de série.
+La touche d'action vise le poste le plus proche à portée de main, en privilégiant celui qu'on regarde.
 
 ## Progression
 
 | Service | Nouveauté |
 |---|---|
-| Apéritif I — Le passe-plat | Soleil coupe, Lune dresse et sert (tutoriel guidé, sans chrono) |
-| Apéritif II — Soupe du jour | Une marmite chez Lune, attention à ne pas laisser brûler |
-| Entrée I — Donnant-donnant | Échanges dans les deux sens : Lune a les citrons, Soleil le couteau |
+| Apéritif I — Le passe-plat | Soleil coupe la tomate, Lune garnit de basilic, sert et lave (tutoriel, sans chrono) |
+| Apéritif II — Soupe du jour | Marmite chez Lune, salade à deux coupes chez Soleil |
+| Entrée I — Donnant-donnant | Lune envoie les citrons, Soleil coupe et fait le sorbet |
 | Entrée II — Chaud et froid | Chaque levier allume la machine de l'autre cuisine |
 | Entrée III — Coup de feu | Chrono, leviers cachés, un piège et un cadeau |
 
