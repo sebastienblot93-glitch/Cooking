@@ -1,7 +1,7 @@
 # Deux joueurs automatiques jouent un niveau au clavier, chacun dans son navigateur, via le serveur.
 # Usage : python tests/play.py <niveau 0|1> <secondes réelles>
 import asyncio, json, sys, time
-LEVEL_NAMES=['1-1','1-2','1-3','2-1','2-2','2-3','2-4']
+LEVEL_NAMES=['1-1','1-2','1-3','2-1','2-2','2-3','2-4','3-1','3-2','3-3','3-4','3-5']
 PORT=int(sys.argv[3]) if len(sys.argv)>3 else 3123
 from playwright.async_api import async_playwright
 import os, subprocess
@@ -26,7 +26,7 @@ async def main():
     await B.wait_for_selector('#readyBtn',timeout=10000)
     await A.keyboard.press('Space'); await B.keyboard.press('Space'); await A.wait_for_timeout(800)
     await A.evaluate('()=>window.__bot.start()'); await B.evaluate('()=>window.__bot.start()')
-    D='()=>{const G=window.__cm.G;return {t:Math.round(G.elapsed),score:G.score,served:G.served,lost:G.lost,orders:G.orders.map(o=>o.r).join(","),goalA:window.__bot.st.goal,held:G.players.map(p=>p.held?JSON.stringify(p.held):"-"),pots:G.tiles.flat().filter(t=>t.pot).map(t=>t.pot.c.length+(t.pot.done?"D":"")+(t.pot.burnt?"B":"")+(t.fire?"F":"")).join(" "),rack:G.tiles.flat().find(t=>t.type==="rack").cnt,dirty:G.tiles.flat().find(t=>t.type==="dirty").cnt,sink:G.tiles.flat().find(t=>t.type==="sink").dirty}}'
+    D='()=>{const G=window.__cm.G;return {t:Math.round(G.elapsed),score:G.score,served:G.served,lost:G.lost,orders:G.orders.map(o=>o.r).join(","),goalA:window.__bot.st.goal,held:G.players.map(p=>p.held?JSON.stringify(p.held):"-"),pos:G.players.map(p=>p.x.toFixed(1)+","+p.z.toFixed(1)),pots:G.tiles.flat().filter(t=>t.pot).map(t=>t.pot.c.length+(t.pot.done?"D":"")+(t.pot.burnt?"B":"")+(t.fire?"F":"")).join(" "),rack:G.tiles.flat().find(t=>t.type==="rack").cnt,dirty:G.tiles.flat().find(t=>t.type==="dirty").cnt,sink:G.tiles.flat().find(t=>t.type==="sink").dirty}}'
     t0=time.time()
     while time.time()-t0<secs:
       await A.wait_for_timeout(8000)
@@ -36,7 +36,7 @@ async def main():
     a=await A.evaluate(D)
     stars=await A.evaluate('()=>{const G=window.__cm.G;return G.L.stars.filter(v=>G.served>=v).length}')
     deaths=await A.evaluate('()=>window.__deaths||0')+await B.evaluate('()=>window.__deaths||0')
-    print(('OK  ' if a['served']>=4 and a['lost']<=3 and not A.errs and not B.errs else 'ÉCHEC ')+f"niveau {LEVEL_NAMES[lv]} : {a['served']} plats servis, {a['lost']} ratés, {a['score']} points, {stars} étoiles, chutes {deaths}",A.errs[:3],B.errs[:3])
+    print(('OK  ' if a['served']>=4 and a['lost']<=3 and not A.errs and not B.errs else 'ÉCHEC ')+f"niveau {LEVEL_NAMES[lv]} : {a['served']} plats servis, {a['lost']} ratés, {a['score']} points, {stars} étoiles, chutes {deaths}, volés {await A.evaluate('()=>window.__cm.G.stolen')}",A.errs[:3],B.errs[:3])
     await b.close()
   srv.terminate()
 asyncio.run(main())

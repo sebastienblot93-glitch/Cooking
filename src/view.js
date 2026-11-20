@@ -21,8 +21,20 @@ function lettuce3(P,y,s){s=s||1;ell(P,.19*s,.14*s,.19*s,0,y+.13*s,0,'#3f9a3a',{g
 function lettuceCut3(P,y,s){s=s||1;for(let i=0;i<7;i++){const a=i*1.7;rbox(P,.14*s,.03*s,.06*s,Math.cos(a)*.09*s,y+(i%3)*.012,Math.sin(a*1.3)*.08*s,i%2?'#5fae45':'#a6dd7c',{ry:a,r:.012});}}
 function onion3(P,y,s){s=s||1;ell(P,.15*s,.14*s,.15*s,0,y+.14*s,0,'#e3a64e',{gloss:.6});for(let i=0;i<4;i++){const a=i/4*Math.PI;ell(P,.152*s,.12*s,.03*s,0,y+.14*s,0,'#c98a3a',{ry:a,a:.55});}cyl(P,.05*s,.012*s,.1*s,0,y+.25*s,0,'#b9772f');for(let i=0;i<3;i++)rbox(P,.012*s,.04*s,.012*s,(i-1)*.025*s,y-.005,0,'#6b4a2a',{r:.004});}
 function onionCut3(P,y,s){s=s||1;for(const [dx,dz,R] of [[-.07,.03,.08],[.07,.05,.07],[0,-.07,.075]]){torus(P,R*s,.018*s,dx*s,y+.02,dz*s,'#f6ecd2',{seg:16});torus(P,R*.55*s,.016*s,dx*s,y+.02,dz*s,'#ead7a8',{seg:14});}}
+function bunTop3(P,y,s){s=s||1;ell(P,.165*s,.1*s,.165*s,0,y,0,'#e39a48',{gloss:.55});for(let i=0;i<7;i++){const a=i*2.4,r=(.04+(i%3)*.035)*s;ell(P,.014*s,.007*s,.022*s,Math.cos(a)*r,y+.085*s-(r*r*1.4),Math.sin(a)*r,'#fff6dc',{ry:a});}}
+function pain3(P,y,s){s=s||1;cyl(P,.15*s,.155*s,.05*s,0,y,0,'#f0c27a',{gloss:.2});bunTop3(P,y+.055*s,s);}
+function steak3(P,y,st,s){s=s||1;const col=st==='cru'?'#d45f62':st==='cuit'?'#7d4528':'#2b1b14';
+ ell(P,.17*s,.045*s,.15*s,0,y+.045*s,0,col,{gloss:st==='cru'?.6:.3});if(st==='cru')for(const [dx,dz] of [[-.05,.03],[.06,-.02],[0,.07]])ell(P,.03*s,.01*s,.02*s,dx*s,y+.085*s,dz*s,'#f4c4c0');
+ if(st==='cuit')for(const i of [-1,0,1])rbox(P,.22*s,.008,.022*s,0,y+.083*s,i*.06*s,'#3e1e0e',{ry:.5,r:.004,noShadow:true});}
+function burger3(P,y,c){let h=y;const bun=c.includes('pain');
+ if(bun){cyl(P,.15,.155,.05,0,h,0,'#f0c27a');h+=.05;}
+ if(c.includes('steak_cuit')){steak3(P,h-.01,'cuit',1);h+=.075;}
+ if(c.includes('laitue_coupe')){ell(P,.18,.018,.17,0,h+.01,0,'#6fbe4f',{gloss:.3});ell(P,.15,.016,.15,.02,h+.02,-.02,'#9ad96f');h+=.035;}
+ if(c.includes('tomate_coupe')){for(const [dx,dz] of [[-.06,0],[.06,.02]]){cyl(P,.075,.075,.025,dx,h,dz,'#d8352a',{gloss:.4});cyl(P,.058,.058,.027,dx,h,dz,'#f4836b');}h+=.03;}
+ if(bun)bunTop3(P,h+.02,1);}
 function plate3(P,y,dirty){cyl(P,.25,.21,.035,0,y,0,dirty?'#d8ccb8':'#f7f5f0',{seg:24,gloss:.5});torus(P,.215,.018,0,y+.035,0,dirty?'#cfc2ab':'#ffffff',{seg:24});if(dirty){cyl(P,.08,.08,.04,.05,y+.005,-.04,'#9a6a3a');cyl(P,.05,.05,.04,-.07,y+.005,.06,'#c0502e');}}
 function plateFull3(P,y,c){plate3(P,y);const top=y+.04,sp=c.find(x=>SOUPS.has(x));
+ if(c.includes('pain')||c.includes('steak_cuit')){burger3(P,top,c);return;}
  if(sp){const on=sp==='soupe_oignon';cyl(P,.16,.13,.07,0,top,0,'#ffffff',{gloss:.4});cyl(P,.135,.135,.072,0,top+.002,0,on?'#c4893a':'#e5652e',{gloss:.3});for(let i=0;i<3;i++)rbox(P,.045,.03,.045,Math.cos(i*2.1)*.06,top+.06,Math.sin(i*2.1)*.06,on?'#f6d58a':'#f2c46a',{r:.01});if(on)ell(P,.06,.012,.05,-.02,top+.075,.02,'#fff1c4');else ell(P,.025,.01,.04,.05,top+.08,-.03,'#3c9a3a');}
  else{if(c.includes('laitue_coupe'))lettuceCut3(Mx2(P,0,0,0,1),top,.95);if(c.includes('tomate_coupe'))tomatoCut3(Mx2(P,0,0,0,1),top+(c.includes('laitue_coupe')?.04:0),.8);}
 }
@@ -30,8 +42,16 @@ const Mx2=(P,x,y,z,ry)=>M4.mul(P,Mx(x,y,z,ry));
 function dirtyStack3(P,y,n){for(let i=0;i<Math.min(n,6);i++)plate3(Mx2(P,(i%2)*.02,0,0,i),y+i*.045,true);}
 function ext3(P,y){cyl(P,.09,.09,.42,0,y,0,'#d8302a',{gloss:.7});ell(P,.09,.05,.09,0,y+.42,0,'#d8302a',{gloss:.7});cyl(P,.03,.03,.08,0,y+.45,0,'#222');rbox(P,.16,.03,.04,.06,y+.5,0,'#222',{r:.01});cyl(P,.02,.02,.2,-.1,y+.35,0,'#333',{rz:.6});rbox(P,.12,.06,.002,0,y+.18,.09,'#ffffff',{r:.005});}
 function item3(it,P,y){if(!it)return;const k=key(it);
- if(k==='tomate_cru')tomato3(P,y);else if(k==='tomate_coupe')tomatoCut3(P,y+.02);else if(k==='laitue_cru')lettuce3(P,y);else if(k==='oignon_cru')onion3(P,y);else if(k==='oignon_coupe')onionCut3(P,y);else if(k==='laitue_coupe')lettuceCut3(P,y);
+ if(k==='tomate_cru')tomato3(P,y);else if(k==='tomate_coupe')tomatoCut3(P,y+.02);else if(k==='laitue_cru')lettuce3(P,y);else if(k==='oignon_cru')onion3(P,y);else if(k==='pain')pain3(P,y);else if(it.k==='steak')steak3(P,y,it.st);else if(k==='oignon_coupe')onionCut3(P,y);else if(k==='laitue_coupe')lettuceCut3(P,y);
  else if(it.k==='assiette')plateFull3(P,y,it.c);else if(it.k==='sales')dirtyStack3(P,y,it.n);else if(it.k==='extincteur')ext3(P,y);}
+
+// ---------- souris ----------
+function mouse3(m,time){const run=Math.sin(m.t*28),P=M4.trs(m.x,Math.abs(run)*.03,m.z,m.a,1.5);
+ ell(P,.11,.085,.16,0,.09,0,'#9c98a6',{gloss:.3});ell(P,.08,.07,.08,0,.13,.15,'#a7a3b1');ell(P,.025,.02,.03,0,.12,.24,'#f08aa0');
+ for(const sd of [-1,1]){ell(P,.05,.055,.012,sd*.06,.21,.12,'#a7a3b1');ell(P,.035,.04,.01,sd*.06,.21,.125,'#f6b3c3');ell(P,.016,.018,.012,sd*.035,.16,.215,'#141018');ell(P,.006,.006,.004,sd*.03,.168,.226,'#ffffff');}
+ for(let i=0;i<5;i++)ell(P,.014,.014,.03,Math.sin(m.t*8+i)*.02*i,.06+i*.012,-.17-i*.05,'#d9a3b0');
+ for(const sd of [-1,1])ell(P,.03,.02,.04,sd*.07,.02,(sd*run)*.04+.02,'#8c8896');
+ if(m.item){const Q=M4.mul(P,M4.trs(0,.16,-.02,0,.55));item3(m.item,Q,0);}}
 
 // ---------- personnages ----------
 function chef3(p,time){
@@ -76,15 +96,16 @@ function drawKitchen(time){
  for(let i=0;i<3;i++){const x=W-2.6+i*.55;cyl(ID,.015,.015,.4,x,1.7,.08,'#555');cyl(ID,.17,.17,.07,x,1.6,.12,'#b8bec6',{rx:1.3,gloss:.8});}
  rbox(ID,1.5,1.0,.05,W/2,1.35,.02,'#cfeaf7',{r:.03,e:'#283848'});rbox(ID,1.6,.08,.08,W/2,1.31,.06,th.trim,{r:.02});rbox(ID,.05,1.0,.06,W/2,1.35,.05,th.trim,{r:.01});
  for(const x of [W*.3,W*.7]){cyl(ID,.01,.01,.6,x,2.6,.6,'#333',{noShadow:true});cyl(ID,.22,.08,.18,x,2.42,.6,th.trim,{noShadow:true,e:'#3a2a10'});ell(ID,.08,.06,.08,x,2.4,.6,'#fff7d0',{e:'#ffe9a0',noShadow:true});}
- for(const row of G.tiles)for(const t of row){const P=Mx(t.x+.5,0,t.z+.5);if(t.type==='floor'){if(t.g)drawGround(t,P,time);continue;}drawTile(t,P,time,th);}
+ for(const row of G.tiles)for(const t of row){const P=Mx(t.x+.5,0,t.z+.5);if(t.type==='floor'){if(t.g)drawGround(t,P,time);continue;}drawTile(t,P,time,th);if(t.fire>0&&t.type!=='stove')fire3(P,CH+.05,time,t.fire);}
+ for(const m of G.mice)mouse3(m,time);
 }
 function drawTile(t,P,time,th){
  const top=CH;
  switch(t.type){
   case 'counter':counterBody(t,P,th.body,th.top);if(t.ch==='E'&&!t.item){rbox(P,.3,.02,.3,0,top,0,'#c0392b',{r:.01,a:.5});}item3(t.item,P,top);break;
   case 'crate':{counterBody(t,P,'#9a6236','#b9834f');const c='#c58a52';rbox(P,.8,.3,.06,0,top,.37,c,{r:.02});rbox(P,.8,.3,.06,0,top,-.37,c,{r:.02});rbox(P,.06,.3,.8,.37,top,0,c,{r:.02});rbox(P,.06,.3,.8,-.37,top,0,c,{r:.02});
-   for(const [dx,dz] of [[-.17,-.15],[.16,-.12],[-.12,.15],[.17,.16],[0,0]]){const Q=Mx2(P,dx,0,dz,dx*7);if(t.ing==='tomate')tomato3(Q,top+.06,.9);else if(t.ing==='oignon')onion3(Q,top+.05,.85);else lettuce3(Q,top+.04,.75);}
-   rbox(P,.36,.2,.02,0,top-.42,.5,'#fff3d6',{r:.02});if(t.ing==='tomate')ell(P,.07,.06,.02,0,top-.32,.515,'#e2382a');else if(t.ing==='oignon')ell(P,.07,.065,.02,0,top-.32,.515,'#e3a64e');else ell(P,.08,.06,.02,0,top-.32,.515,'#58b13f');break;}
+   for(const [dx,dz] of [[-.17,-.15],[.16,-.12],[-.12,.15],[.17,.16],[0,0]]){const Q=Mx2(P,dx,0,dz,dx*7);if(t.ing==='tomate')tomato3(Q,top+.06,.9);else if(t.ing==='oignon')onion3(Q,top+.05,.85);else if(t.ing==='pain')pain3(Q,top+.03,.8);else if(t.ing==='steak')steak3(Q,top+.03,'cru',.85);else lettuce3(Q,top+.04,.75);}
+   rbox(P,.36,.2,.02,0,top-.42,.5,'#fff3d6',{r:.02});if(t.ing==='tomate')ell(P,.07,.06,.02,0,top-.32,.515,'#e2382a');else if(t.ing==='oignon')ell(P,.07,.065,.02,0,top-.32,.515,'#e3a64e');else if(t.ing==='pain')ell(P,.08,.055,.02,0,top-.32,.515,'#e39a48');else if(t.ing==='steak')ell(P,.08,.05,.02,0,top-.32,.515,'#d45f62');else ell(P,.08,.06,.02,0,top-.32,.515,'#58b13f');break;}
   case 'board':{counterBody(t,P,th.body,th.top);rbox(P,.66,.05,.46,0,top,0,'#dba36a',{r:.03,gloss:.2});
    const chopping=G.players.some(p=>p.chopping&&p.workTile===t),k=chopping?Math.abs(Math.sin(time*16))*.12:0;
    rbox(P,.05,.02,.32,.27,top+.06+k,.0,'#dfe5ec',{gloss:1,r:.008,ry:.2,rx:chopping?-.4:0});rbox(P,.05,.04,.12,.3,top+.06+k,.21,'#3b2a20',{r:.01,ry:.2});
@@ -116,6 +137,14 @@ function drawTile(t,P,time,th){
    rbox(Q,.1,.1,1.0,-.45,top-.07,0,'#c9ced6',{r:.03,gloss:.9});rbox(Q,.1,.1,1.0,.45,top-.07,0,'#c9ced6',{r:.03,gloss:.9});
    rbox(Q,.05,.012,.2,-.06,top+.02,.3,'#ffd34d',{ry:.8,r:.005,e:'#5a4400',noShadow:true});rbox(Q,.05,.012,.2,.06,top+.02,.3,'#ffd34d',{ry:-.8,r:.005,e:'#5a4400',noShadow:true});
    if(t.item){const off=t.bp-.5;item3(t.item,M4.mul(P,Mx(dx*off,0,dz*off)),top);}break;}
+  case 'pan':{counterBody(t,P,'#4a4f58','#6f7782');torus(P,.26,.025,0,top+.01,0,'#2a2d33');const pn=t.pan,it=pn.it,on=it&&it.st!=='brule'&&!(t.fire>0);
+   if(on)for(let i=0;i<10;i++){const a=i/10*Math.PI*2+time;ell(P,.03,.045,.03,Math.cos(a)*.24,top+.04,Math.sin(a)*.24,'#3d8bff',{e:'#3d8bff',a:.8,noShadow:true});}
+   cyl(P,.3,.26,.07,0,top+.03,0,'#2c2f36',{gloss:.7,seg:24});cyl(P,.27,.27,.005,0,top+.1,0,'#3a3e46',{gloss:.9});torus(P,.29,.02,0,top+.1,0,'#3e434c',{seg:24});
+   rbox(P,.36,.04,.07,.46,top+.07,0,'#2a2016',{r:.02,rz:-.12});
+   if(it){const jig=it.st==='cru'||it.st==='cuit'?Math.sin(time*30)*.004:0;steak3(P,top+.1+jig,it.st,1);}
+   break;}
+  case 'hole':{counterBody(t,P,th.body,th.top);const f=NB.find(([dx,dz])=>{const n=T(t.x+dx,t.z+dz);return n&&n.type==='floor';})||[0,1],Q=M4.mul(P,Mx(0,0,0,Math.atan2(f[0],f[1])));
+   ell(Q,.2,.2,.04,0,0,.49,'#120c10',{noShadow:true});ell(Q,.23,.23,.03,0,0,.485,shade3(th.body,-.35));rbox(Q,.12,.06,.1,.32,top,.15,'#f6d04a',{r:.02,rz:.2});break;}
   case 'trash':{counterBody(t,P,th.body,th.top);cyl(P,.24,.2,.3,0,top,0,'#5e6672',{gloss:.4});cyl(P,.26,.26,.04,0,top+.3,0,'#4a515c',{gloss:.4});rbox(P,.16,.04,.04,0,top+.34,0,'#2a2d33',{r:.01});break;}
  }
 }
@@ -123,6 +152,12 @@ function drawGround(t,P,time){
  const g=t.g;
  if(g==='ice'){rbox(P,.99,.02,.99,0,0,0,(t.x+t.z)%2?'#a9dcf3':'#9cd3ee',{r:.012,gloss:1,a:.92});rbox(P,.5,.004,.03,(t.seed-.5)*.5,.021,(t.seed*3%1-.5)*.6,'#f4fbff',{r:.002,ry:t.seed*9,a:.85,noShadow:true});if(t.seed<.4)rbox(P,.3,.004,.02,(t.seed*7%1-.5)*.6,.021,(t.seed*5%1-.5)*.6,'#ffffff',{r:.002,ry:t.seed*13,a:.7,noShadow:true});return;}
  if(g==='water'||isBridge(t)){water3(t,P,time,!isBridge(t));if(isBridge(t))bridge3(t,P,time);return;}
+ if(g==='portal'){const col=portalCol(t),dk=shade3(col,-.55),sp=time*2.2*(t.ch==='@'||t.ch==='%'?1:-1),pu=.5+Math.sin(time*4+t.x)*.5;
+  cyl(P,.42,.42,.014,0,.003,0,'#140c26',{noShadow:true});torus(P,.38,.055,0,.035,0,col,{e:dk,gloss:.8,seg:28});
+  cyl(P,.33,.33,.012,0,.016,0,col,{a:.75,e:dk,noShadow:true});cyl(P,.2+pu*.08,.2+pu*.08,.014,0,.02,0,'#ffffff',{a:.35,e:col,noShadow:true});
+  cyl(P,.36,.3,.9,0,.02,0,col,{open:true,ds:true,a:.16+pu*.06,e:col,noShadow:true});
+  for(let i=0;i<4;i++){const a=sp+i*Math.PI/2;ell(P,.07,.014,.028,Math.cos(a)*.24,.04,Math.sin(a)*.24,'#ffffff',{e:col,ry:-a,noShadow:true});}
+  return;}
  if(g==='conv'){const [dx,dz]=t.push,Q=M4.mul(P,Mx(0,0,0,Math.atan2(dx,dz)));
   rbox(Q,.98,.03,.98,0,0,0,'#3b404c',{r:.01});rbox(Q,.07,.04,.98,-.46,0,0,'#f2c14e',{r:.012});rbox(Q,.07,.04,.98,.46,0,0,'#f2c14e',{r:.012});
   for(let i=0;i<2;i++){const s=((time*CONVV+i*.5)%1)-.5;rbox(Q,.05,.012,.32,-.1,.03,s,'#ffd34d',{ry:.8,e:'#4a3800',r:.005,noShadow:true});rbox(Q,.05,.012,.32,.1,.03,s,'#ffd34d',{ry:-.8,e:'#4a3800',r:.005,noShadow:true});}}

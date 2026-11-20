@@ -1,8 +1,10 @@
-# Chaud Devant ! 🍅🧅🍲
+# Chaud Devant ! 🍅🧅🍔
 
 Jeu de cuisine coopératif **en ligne pour deux joueurs**, chacun sur son ordinateur, dans **une seule cuisine partagée**, en 3D, dans l'esprit d'Overcooked.
 
-- Couper les ingrédients, remplir la marmite (3 tomates ou 3 oignons), la surveiller : une soupe oubliée brûle et **prend feu** (extincteur près du mur).
+- Couper les ingrédients, remplir la marmite (3 tomates ou 3 oignons), saisir les steaks à la poêle, la surveiller : ce qu'on oublie brûle et **prend feu**, et le feu **gagne les postes voisins** toutes les 7 secondes (extincteur près du mur).
+- Recettes : soupe de tomate, soupe à l'oignon, salade, burger, burger garni (pain, steak, laitue, tomate). On peut prendre le pain directement dans la caisse avec une assiette.
+- **Commandes VIP** (ticket doré à couronne) : moins de temps, pièces doublées.
 - Dresser, servir à la passe, puis **laver les assiettes sales** qui reviennent.
 - Commandes avec chrono, pourboires selon la rapidité, **séries** qui multiplient les pourboires, 3 minutes par niveau.
 - **1 à 4 étoiles** selon le nombre de plats servis. Une jauge en bas de l'écran montre les paliers pendant la partie, et il faut au moins 1 étoile pour débloquer le niveau suivant.
@@ -18,6 +20,11 @@ Jeu de cuisine coopératif **en ligne pour deux joueurs**, chacun sur son ordina
 | | 2-2 La patinoire | sol gelé : les chefs glissent |
 | | 2-3 Le pont-levis | une rivière et deux ponts qui montent et descendent en alternance ; tomber à l'eau fait perdre ce qu'on porte et 3 secondes |
 | | 2-4 L'usine | tapis roulants au sol qui emportent les chefs, convoyeur à objets au centre |
+| 3 · Les Folies | 3-1 Le grill | la poêle et les burgers, le feu qui se propage |
+| | 3-2 Les portails | deux cuisines séparées, reliées par deux paires de portails |
+| | 3-3 La panne | coupures de courant périodiques : seuls les chefs et les feux éclairent |
+| | 3-4 Les souris | des souris sortent des trous et volent les ingrédients ; les toucher les fait fuir et rend l'ingrédient |
+| | 3-5 Le grand banquet | portails, souris et coupures à la fois, 5 commandes en même temps |
 
 Pour tester tous les niveaux sans les débloquer : ajouter `?tout` à l'adresse (par exemple `https://…onrender.com/?tout`).
 

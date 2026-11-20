@@ -6,17 +6,22 @@ window.__bot=(()=>{
  const AR=['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'];const rel=()=>AR.forEach(ku);
  const tap=c=>{ku(c);kd(c);setTimeout(()=>ku(c),45);};
  function me(){const G=cm.G,i=cm.NET.role==='guest'?1:0;return {G,i,p:G.players[i]};}
- function bfs(G,sx,sz,goals,other){const k=(x,z)=>x+','+z,prev={},q=[[sx,sz]];prev[k(sx,sz)]=null;const ox=Math.floor(other.x),oz=Math.floor(other.z);
-  while(q.length){const [x,z]=q.shift();if(goals.has(k(x,z))){const path=[];let kk=k(x,z);while(kk){path.unshift(kk.split(',').map(Number));kk=prev[kk];}return path;}
-   for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,nz=z+dz,kk=k(nx,nz);if(nx<0||nz<0||nx>=G.W||nz>=G.H||kk in prev)continue;if(!cm.botSafe(nx,nz))continue;if(nx===ox&&nz===oz&&!goals.has(kk))continue;prev[kk]=k(x,z);q.push([nx,nz]);}}return null;}
+ function bfs(G,sx,sz,goals,other){const k=(x,z)=>x+','+z,prev={},step={},q=[[sx,sz]];prev[k(sx,sz)]=null;const ox=Math.floor(other.x),oz=Math.floor(other.z);
+  while(q.length){const [x,z]=q.shift();if(goals.has(k(x,z))){const path=[];let kk=k(x,z);while(kk){path.unshift(step[kk]||kk.split(',').map(Number));kk=prev[kk];}return path;}
+   for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){let nx=x+dx,nz=z+dz;if(nx<0||nz<0||nx>=G.W||nz>=G.H)continue;if(!cm.botSafe(nx,nz))continue;const t=G.tiles[nz][nx],st=[nx,nz];
+    if(t.pair&&!goals.has(k(nx,nz))){nx=t.pair.x;nz=t.pair.z;}
+    const kk=k(nx,nz);if(kk in prev)continue;if(nx===ox&&nz===oz&&!goals.has(kk))continue;prev[kk]=k(x,z);step[kk]=st;q.push([nx,nz]);}}return null;}
  const LA=p=>{const t=cm.G.tiles[Math.floor(p.z)]&&cm.G.tiles[Math.floor(p.z)][Math.floor(p.x)];const k=t&&t.g==='ice'?.38:0;return {x:p.x+(p.vx||0)*k,z:p.z+(p.vz||0)*k};};
  function moveAxis(p0,cx,cz,nx,nz){rel();const p=LA(p0);
   if(nx!==cx){if(Math.abs(p.z-(cz+.5))>.12){kd(p.z<cz+.5?'ArrowDown':'ArrowUp');return;}kd(nx>cx?'ArrowRight':'ArrowLeft');}
   else{if(Math.abs(p.x-(cx+.5))>.12){kd(p.x<cx+.5?'ArrowRight':'ArrowLeft');return;}kd(nz>cz?'ArrowDown':'ArrowUp');}}
  function step(){
   if(cm.state!=='play'){rel();ku('Space');return;}
-  const {G,i,p}=me();if(p.dead>0&&!st.wasDead)window.__deaths=(window.__deaths||0)+1;st.wasDead=p.dead>0;const plan=cm.planFor(p,i);
-  if(!plan||!plan.t){rel();ku('Space');st.goal=null;return;}
+  const {G,i,p}=me();window.__stolen=G.stolen;if(p.dead>0&&!st.wasDead)window.__deaths=(window.__deaths||0)+1;st.wasDead=p.dead>0;const plan=cm.planFor(p,i);
+  if(!plan||!plan.t&&!plan.m){rel();ku('Space');st.goal=null;return;}
+  if(plan.m){const m=plan.m;st.goal='souris';const cx=Math.floor(p.x),cz=Math.floor(p.z),mx=Math.floor(m.x),mz=Math.floor(m.z);ku('Space');
+   if(cx===mx&&cz===mz||Math.hypot(m.x-p.x,m.z-p.z)<1){rel();const dx=m.x-p.x,dz=m.z-p.z;if(Math.abs(dx)>.15)kd(dx>0?'ArrowRight':'ArrowLeft');if(Math.abs(dz)>.15)kd(dz>0?'ArrowDown':'ArrowUp');return;}
+   const path=bfs(G,cx,cz,new Set([mx+','+mz]),{x:-9,z:-9});if(path&&path.length>1){const [nx,nz]=path[1];moveAxis(p,cx,cz,nx,nz);}else rel();return;}
   const t=plan.t;st.goal=t.type+'('+t.x+','+t.z+')';
   const cx=Math.floor(p.x),cz=Math.floor(p.z),other=G.players[1-i];
   const adj=[[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dz])=>[t.x+dx,t.z+dz]).filter(([x,z])=>x>=0&&z>=0&&x<G.W&&z<G.H&&G.tiles[z][x].type==='floor'&&G.tiles[z][x].g!=='water');

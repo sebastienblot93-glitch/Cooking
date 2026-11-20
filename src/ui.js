@@ -14,6 +14,8 @@ const SFX0={pick:()=>tone(660,.07,'triangle',.1),drop:()=>tone(420,.08,'triangle
  spray:()=>noise(.22,.18,3500),scrub:()=>noise(.18,.12,1200),splash:()=>noise(.3,.2,900),clink:()=>{tone(1500,.06,'triangle',.06);tone(1900,.06,'triangle',.05,.05);},
  serve:()=>{tone(1047,.12,'triangle',.1);tone(1319,.12,'triangle',.1,.08);tone(1568,.3,'triangle',.1,.16);},fail:()=>tone(160,.35,'sawtooth',.06,0,.6),order:()=>{tone(784,.1,'triangle',.07);tone(988,.14,'triangle',.07,.08);},
  dash:()=>noise(.12,.12,700),star:()=>[1319,1568,2093].forEach((f,i)=>tone(f,.22,'sine',.09,i*.07)),pop:()=>{tone(500,.1,'sine',.1,0,2.2);},
+ sizzle:()=>{noise(.5,.09,5200);noise(.3,.06,2600);},squeak:()=>{tone(2200,.06,'sine',.06,0,1.4);tone(2600,.07,'sine',.05,.07,1.3);},
+ warp:()=>{tone(300,.25,'sine',.09,0,4);tone(900,.2,'triangle',.04,.05,.4);},powerOff:()=>{tone(220,.5,'sawtooth',.05,0,.25);noise(.15,.15,300);},powerOn:()=>{tone(120,.25,'square',.03,0,3);tone(880,.1,'sine',.05,.2);},
  bridgeUp:()=>{noise(.35,.12,400);tone(220,.3,'triangle',.05,0,1.6);},bridgeDown:()=>{noise(.35,.12,400);tone(330,.3,'triangle',.05,0,.5);},end:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.4,'triangle',.09,i*.12))};
 
 // ---------- entrées : flèches (ou ZQSD), Espace/Entrée, Maj pour le sprint ----------
@@ -77,17 +79,18 @@ function netMsg(m){
 }
 function snapshot(){
  const tl=[];let i=0;for(const row of G.tiles)for(const t of row){if(t.type!=='floor'){const pot=t.pot?[t.pot.c.length,R2(t.pot.prog),t.pot.done?1:0,R2(t.pot.burn),t.pot.burnt?1:0,t.pot.c[0]||'']:0;
-  tl.push([i,t.item,t.cnt===undefined?null:t.cnt,t.dirty||0,R2(t.wp||0),R2(t.fire||0),pot,t.bp===undefined?0:R2(t.bp)]);}i++;}
+  tl.push([i,t.item,t.cnt===undefined?null:t.cnt,t.dirty||0,R2(t.wp||0),R2(t.fire||0),pot,t.bp===undefined?0:R2(t.bp),t.pan?[t.pan.it,R2(t.pan.prog),R2(t.pan.burn)]:0]);}i++;}
  const pos=t=>t?[t.x,t.z]:null;
- const s={t:'snap',lvl:G.idx,tm:R2(G.time),el:R2(G.elapsed),sc:G.score,sv:G.served,lo:G.lost,st:G.streak,o:G.orders.map(o=>[o.r,R2(o.t),o.max,R2(o.age)]),tl,
+ const s={t:'snap',lvl:G.idx,tm:R2(G.time),el:R2(G.elapsed),sc:G.score,sv:G.served,lo:G.lost,st:G.streak,o:G.orders.map(o=>[o.r,R2(o.t),o.max,R2(o.age),o.vip?1:0]),tl,mi:G.mice.map(m=>[m.id,R2(m.x),R2(m.z),R2(m.a),m.item||0]),
   p:G.players.map(p=>({x:R2(p.x),z:R2(p.z),dx:R2(p.dir.x),dz:R2(p.dir.z),h:p.held,w:R2(p.walk),m:p.moving?1:0,c:p.chopping?1:0,sp:p.spraying?1:0,d:R2(p.dash),wt:pos(p.workTile&&p.chopping?p.workTile:null),tg:pos(p.target),sk:p.skin,dd:R2(p.dead)})),ev:NET.out};
  NET.out=[];return s;
 }
 function applySnap(s){
  if(!G||G.idx!==s.lvl)startLevel(s.lvl);
- G.time=s.tm;G.elapsed=s.el;G.score=s.sc;G.served=s.sv;G.lost=s.lo;G.streak=s.st;G.orders=s.o.map(([r,t,max,age])=>({r,t,max,age}));
+ G.time=s.tm;G.elapsed=s.el;G.score=s.sc;G.served=s.sv;G.lost=s.lo;G.streak=s.st;G.orders=s.o.map(([r,t,max,age,vip])=>({r,t,max,age,vip:!!vip}));
+ const old={};for(const m of G.mice)old[m.id]=m;G.mice=(s.mi||[]).map(([id,x,z,a,item])=>{const m=old[id]||{id,x,z,t:0};m.tx=x;m.tz=z;m.a=a;m.item=item||null;return m;});
  const flat=[];for(const row of G.tiles)for(const t of row)flat.push(t);
- for(const [i,item,cnt,dirty,wp,fire,pot,bp] of s.tl){const t=flat[i];if(!t)continue;t.item=item;if(cnt!==null)t.cnt=cnt;t.dirty=dirty;t.wp=wp;t.fire=fire;if(t.type==='belt')t.bp=bp;
+ for(const [i,item,cnt,dirty,wp,fire,pot,bp,pan] of s.tl){const t=flat[i];if(!t)continue;t.item=item;if(cnt!==null)t.cnt=cnt;t.dirty=dirty;t.wp=wp;t.fire=fire;if(t.type==='belt')t.bp=bp;if(pan&&t.pan){t.pan.it=pan[0];t.pan.prog=pan[1];t.pan.burn=pan[2];}
   if(pot&&t.pot){const n=pot[0];t.pot.c=Array(n).fill(pot[5]||'tomate');t.pot.prog=pot[1];t.pot.done=!!pot[2];t.pot.burn=pot[3];t.pot.burnt=!!pot[4];}}
  s.p.forEach((ps,i)=>{const p=G.players[i];p.held=ps.h;p.chopping=!!ps.c;p.spraying=!!ps.sp;p.workTile=ps.wt?T(ps.wt[0],ps.wt[1]):null;p.skin=ps.sk;
   if(i===meI()){if(ps.dd>0){if(!(p.dead>0)){p.held=null;p.vx=p.vz=0;}p.dead=ps.dd;}else if(p.dead>0){p.dead=0;const sp=G.spawns[i];p.x=sp.x;p.z=sp.z;p.vx=p.vz=0;}}
@@ -98,13 +101,15 @@ function applySnap(s){
 function remoteInput(p,dt){
  const r=NET.remote,press=r.pr>NET.lastPr,dash=r.ds>NET.lastDs;NET.lastPr=r.pr;NET.lastDs=r.ds;
  if(p.await&&!(p.dead>0)){const s=G.spawns[p.i];if(Math.hypot(r.x-s.x,r.z-s.z)<1.2)p.await=false;}
- if(p.dead>0||p.await){}else if(press){p.x=r.x;p.z=r.z;}else{const a=Math.min(1,dt*20);p.x+=(r.x-p.x)*a;p.z+=(r.z-p.z)*a;}
+ const far=Math.hypot(r.x-p.x,r.z-p.z)>2.2;
+ if(p.dead>0||p.await){}else if(press||far){if(far&&!press)playFx({s:'warp'});p.x=r.x;p.z=r.z;}else{const a=Math.min(1,dt*20);p.x+=(r.x-p.x)*a;p.z+=(r.z-p.z)*a;}
  p.dir={x:r.dx,z:r.dz};p.walk=r.w;if(dash){p.dash=.17;emitLocal({s:'dash'});}else p.dash=Math.max(0,(p.dash||0)-dt);
  return {remote:true,mv:!!r.mv,act:press,actH:!!r.h,tg:r.tg};
 }
 function guestStep(dt){
  const me=G.players[1],o=G.players[0],inp=readInput();
- if(o.tx!==undefined){const a=Math.min(1,dt*14);o.x+=(o.tx-o.x)*a;o.z+=(o.tz-o.z)*a;}
+ if(o.tx!==undefined){if(Math.hypot(o.tx-o.x,o.tz-o.z)>2.2){o.x=o.tx;o.z=o.tz;}else{const a=Math.min(1,dt*14);o.x+=(o.tx-o.x)*a;o.z+=(o.tz-o.z)*a;}}
+ for(const m of G.mice){if(m.tx===undefined)continue;m.t+=dt;const a=Math.min(1,dt*12);m.x+=(m.tx-m.x)*a;m.z+=(m.tz-m.z)*a;}
  if(me.dead>0)me.dead=Math.max(.01,me.dead-dt);
  moveP(me,inp,dt,o);me.target=facing(me);G.elapsed+=dt;
  if(inp.act)NET.pr++;if(inp.dash)NET.ds++;
@@ -195,4 +200,4 @@ function frame(now){
 }
 function initGL(){if(R3.tried)return;R3.tried=true;try{if(!r3Init(document.getElementById('gl')))show(`<div class="card"><h2>3D indisponible</h2><p class="small">Ton navigateur ne gère pas WebGL2. Essaie Chrome, Firefox ou Edge à jour.</p></div>`);}catch(e){console.error(e);}}
 resize();startLevel(0);titleScreen();updBar();requestAnimationFrame(frame);
-window.__cm={R3,get G(){return G},get state(){return state},NET,startLevel,go,LEVELS,press,planFor,briefScreen,update,botSafe,bridgeF,camFor};
+window.__cm={darkF,R3,get G(){return G},get state(){return state},NET,startLevel,go,LEVELS,press,planFor,briefScreen,update,botSafe,bridgeF,camFor};
