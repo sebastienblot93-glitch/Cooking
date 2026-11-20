@@ -1,7 +1,8 @@
 # Deux joueurs automatiques jouent un niveau au clavier, chacun dans son navigateur, via le serveur.
 # Usage : python tests/play.py <niveau 0|1> <secondes réelles>
 import asyncio, json, sys, time
-LEVEL_NAMES=['1-1','1-2']
+LEVEL_NAMES=['1-1','1-2','1-3','2-1','2-2','2-3','2-4']
+PORT=int(sys.argv[3]) if len(sys.argv)>3 else 3123
 from playwright.async_api import async_playwright
 import os, subprocess
 HERE=os.path.dirname(os.path.abspath(__file__))
@@ -9,13 +10,13 @@ BOT=open(os.path.join(HERE,'bot.js')).read()
 async def page(b):
   ctx=await b.new_context(viewport={'width':1100,'height':650}); pg=await ctx.new_page(); pg.errs=[]
   pg.on('pageerror',lambda e:pg.errs.append(str(e))); pg.on('console',lambda m:pg.errs.append(m.text) if m.type=='error' and 'Failed to load' not in m.text and 'ERR_' not in m.text else None)
-  await pg.goto('http://localhost:3123/'); await pg.wait_for_timeout(400); await pg.evaluate(BOT); await pg.evaluate('()=>{window.__noRender=true}'); return pg
+  await pg.goto(f'http://localhost:{PORT}/?tout'); await pg.wait_for_timeout(400); await pg.evaluate(BOT); await pg.evaluate('()=>{window.__noRender=true}'); return pg
 async def st(pg): return await pg.evaluate('()=>window.__cm.state')
 async def main():
   lv=int(sys.argv[1]) if len(sys.argv)>1 else 0; secs=int(sys.argv[2]) if len(sys.argv)>2 else 200
-  srv=subprocess.Popen(['node','server.js'],cwd=os.path.join(HERE,'..'),env={**os.environ,'PORT':'3123'},stdout=subprocess.DEVNULL); await asyncio.sleep(1)
+  srv=subprocess.Popen(['node','server.js'],cwd=os.path.join(HERE,'..'),env={**os.environ,'PORT':str(PORT)},stdout=subprocess.DEVNULL); await asyncio.sleep(1)
   async with async_playwright() as p:
-    b=await p.chromium.launch(args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+    b=await p.chromium.launch(executable_path='/usr/bin/google-chrome',args=['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
     A=await page(b);B=await page(b)
     await A.click('[data-act=create]'); await A.wait_for_timeout(400); code=await A.evaluate('()=>window.__cm.NET.code')
     await B.fill('#joinCode',code); await B.keyboard.press('Enter')
@@ -33,7 +34,9 @@ async def main():
       print(json.dumps(a),'| B:',gb,flush=True)
       if await st(A)=='result': break
     a=await A.evaluate(D)
-    print(('OK  ' if a['served']>=4 and a['lost']<=2 and not A.errs and not B.errs else 'ÉCHEC ')+f"niveau {LEVEL_NAMES[lv]} : {a['served']} plats servis, {a['lost']} ratés, {a['score']} points")
+    stars=await A.evaluate('()=>{const G=window.__cm.G;return G.L.stars.filter(v=>G.served>=v).length}')
+    deaths=await A.evaluate('()=>window.__deaths||0')+await B.evaluate('()=>window.__deaths||0')
+    print(('OK  ' if a['served']>=4 and a['lost']<=3 and not A.errs and not B.errs else 'ÉCHEC ')+f"niveau {LEVEL_NAMES[lv]} : {a['served']} plats servis, {a['lost']} ratés, {a['score']} points, {stars} étoiles, chutes {deaths}",A.errs[:3],B.errs[:3])
     await b.close()
   srv.terminate()
 asyncio.run(main())

@@ -1,7 +1,7 @@
 // ================= ENTRÉES, SON, RÉSEAU, ÉCRANS =================
 let state='title',levelIdx=0,ANIM=0;
-function load(k,d){try{const v=localStorage.getItem('cuisineOC.'+k);return v?JSON.parse(v):d;}catch(e){return d;}}
-function save(k,v){try{localStorage.setItem('cuisineOC.'+k,JSON.stringify(v));}catch(e){}}
+function load(k,d){try{const v=localStorage.getItem('chaudDevant.'+k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function save(k,v){try{localStorage.setItem('chaudDevant.'+k,JSON.stringify(v));}catch(e){}}
 let BEST=load('best',{}),mySkin=load('skin',null),choice=[0,2];
 
 // ---------- son ----------
@@ -13,7 +13,8 @@ const SFX0={pick:()=>tone(660,.07,'triangle',.1),drop:()=>tone(420,.08,'triangle
  plop:()=>tone(300,.12,'sine',.14,0,.5),ding:()=>{tone(1320,.25,'sine',.1);tone(1760,.35,'sine',.06,.08);},warn:()=>tone(1000,.06,'square',.04),fire:()=>{noise(.6,.3,600);tone(140,.5,'sawtooth',.05,0,.6);},
  spray:()=>noise(.22,.18,3500),scrub:()=>noise(.18,.12,1200),splash:()=>noise(.3,.2,900),clink:()=>{tone(1500,.06,'triangle',.06);tone(1900,.06,'triangle',.05,.05);},
  serve:()=>{tone(1047,.12,'triangle',.1);tone(1319,.12,'triangle',.1,.08);tone(1568,.3,'triangle',.1,.16);},fail:()=>tone(160,.35,'sawtooth',.06,0,.6),order:()=>{tone(784,.1,'triangle',.07);tone(988,.14,'triangle',.07,.08);},
- dash:()=>noise(.12,.12,700),end:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.4,'triangle',.09,i*.12))};
+ dash:()=>noise(.12,.12,700),star:()=>[1319,1568,2093].forEach((f,i)=>tone(f,.22,'sine',.09,i*.07)),pop:()=>{tone(500,.1,'sine',.1,0,2.2);},
+ bridgeUp:()=>{noise(.35,.12,400);tone(220,.3,'triangle',.05,0,1.6);},bridgeDown:()=>{noise(.35,.12,400);tone(330,.3,'triangle',.05,0,.5);},end:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.4,'triangle',.09,i*.12))};
 
 // ---------- entrées : flèches (ou ZQSD), Espace/Entrée, Maj pour le sprint ----------
 const MOVE={up:['ArrowUp','KeyW'],down:['ArrowDown','KeyS'],left:['ArrowLeft','KeyA'],right:['ArrowRight','KeyD']};
@@ -75,33 +76,37 @@ function netMsg(m){
  updBar();
 }
 function snapshot(){
- const tl=[];let i=0;for(const row of G.tiles)for(const t of row){if(t.type!=='floor'){const pot=t.pot?[t.pot.c.length,R2(t.pot.prog),t.pot.done?1:0,R2(t.pot.burn),t.pot.burnt?1:0]:0;
-  tl.push([i,t.item,t.cnt===undefined?null:t.cnt,t.dirty||0,R2(t.wp||0),R2(t.fire||0),pot]);}i++;}
+ const tl=[];let i=0;for(const row of G.tiles)for(const t of row){if(t.type!=='floor'){const pot=t.pot?[t.pot.c.length,R2(t.pot.prog),t.pot.done?1:0,R2(t.pot.burn),t.pot.burnt?1:0,t.pot.c[0]||'']:0;
+  tl.push([i,t.item,t.cnt===undefined?null:t.cnt,t.dirty||0,R2(t.wp||0),R2(t.fire||0),pot,t.bp===undefined?0:R2(t.bp)]);}i++;}
  const pos=t=>t?[t.x,t.z]:null;
  const s={t:'snap',lvl:G.idx,tm:R2(G.time),el:R2(G.elapsed),sc:G.score,sv:G.served,lo:G.lost,st:G.streak,o:G.orders.map(o=>[o.r,R2(o.t),o.max,R2(o.age)]),tl,
-  p:G.players.map(p=>({x:R2(p.x),z:R2(p.z),dx:R2(p.dir.x),dz:R2(p.dir.z),h:p.held,w:R2(p.walk),m:p.moving?1:0,c:p.chopping?1:0,sp:p.spraying?1:0,d:R2(p.dash),wt:pos(p.workTile&&p.chopping?p.workTile:null),tg:pos(p.target),sk:p.skin})),ev:NET.out};
+  p:G.players.map(p=>({x:R2(p.x),z:R2(p.z),dx:R2(p.dir.x),dz:R2(p.dir.z),h:p.held,w:R2(p.walk),m:p.moving?1:0,c:p.chopping?1:0,sp:p.spraying?1:0,d:R2(p.dash),wt:pos(p.workTile&&p.chopping?p.workTile:null),tg:pos(p.target),sk:p.skin,dd:R2(p.dead)})),ev:NET.out};
  NET.out=[];return s;
 }
 function applySnap(s){
  if(!G||G.idx!==s.lvl)startLevel(s.lvl);
  G.time=s.tm;G.elapsed=s.el;G.score=s.sc;G.served=s.sv;G.lost=s.lo;G.streak=s.st;G.orders=s.o.map(([r,t,max,age])=>({r,t,max,age}));
  const flat=[];for(const row of G.tiles)for(const t of row)flat.push(t);
- for(const [i,item,cnt,dirty,wp,fire,pot] of s.tl){const t=flat[i];if(!t)continue;t.item=item;if(cnt!==null)t.cnt=cnt;t.dirty=dirty;t.wp=wp;t.fire=fire;
-  if(pot&&t.pot){const n=pot[0];t.pot.c=Array(n).fill('tomate');t.pot.prog=pot[1];t.pot.done=!!pot[2];t.pot.burn=pot[3];t.pot.burnt=!!pot[4];}}
+ for(const [i,item,cnt,dirty,wp,fire,pot,bp] of s.tl){const t=flat[i];if(!t)continue;t.item=item;if(cnt!==null)t.cnt=cnt;t.dirty=dirty;t.wp=wp;t.fire=fire;if(t.type==='belt')t.bp=bp;
+  if(pot&&t.pot){const n=pot[0];t.pot.c=Array(n).fill(pot[5]||'tomate');t.pot.prog=pot[1];t.pot.done=!!pot[2];t.pot.burn=pot[3];t.pot.burnt=!!pot[4];}}
  s.p.forEach((ps,i)=>{const p=G.players[i];p.held=ps.h;p.chopping=!!ps.c;p.spraying=!!ps.sp;p.workTile=ps.wt?T(ps.wt[0],ps.wt[1]):null;p.skin=ps.sk;
+  if(i===meI()){if(ps.dd>0){if(!(p.dead>0)){p.held=null;p.vx=p.vz=0;}p.dead=ps.dd;}else if(p.dead>0){p.dead=0;const sp=G.spawns[i];p.x=sp.x;p.z=sp.z;p.vx=p.vz=0;}}
+  else p.dead=ps.dd;
   if(i!==meI()){p.tx=ps.x;p.tz=ps.z;p.dir={x:ps.dx,z:ps.dz};p.walk=ps.w;p.moving=!!ps.m;p.dash=ps.d;p.target=ps.tg?T(ps.tg[0],ps.tg[1]):null;}});
  for(const e of s.ev)playFx(e);
 }
 function remoteInput(p,dt){
  const r=NET.remote,press=r.pr>NET.lastPr,dash=r.ds>NET.lastDs;NET.lastPr=r.pr;NET.lastDs=r.ds;
- if(press){p.x=r.x;p.z=r.z;}else{const a=Math.min(1,dt*20);p.x+=(r.x-p.x)*a;p.z+=(r.z-p.z)*a;}
+ if(p.await&&!(p.dead>0)){const s=G.spawns[p.i];if(Math.hypot(r.x-s.x,r.z-s.z)<1.2)p.await=false;}
+ if(p.dead>0||p.await){}else if(press){p.x=r.x;p.z=r.z;}else{const a=Math.min(1,dt*20);p.x+=(r.x-p.x)*a;p.z+=(r.z-p.z)*a;}
  p.dir={x:r.dx,z:r.dz};p.walk=r.w;if(dash){p.dash=.17;emitLocal({s:'dash'});}else p.dash=Math.max(0,(p.dash||0)-dt);
  return {remote:true,mv:!!r.mv,act:press,actH:!!r.h,tg:r.tg};
 }
 function guestStep(dt){
  const me=G.players[1],o=G.players[0],inp=readInput();
  if(o.tx!==undefined){const a=Math.min(1,dt*14);o.x+=(o.tx-o.x)*a;o.z+=(o.tz-o.z)*a;}
- moveP(me,inp,dt,o);me.target=facing(me);
+ if(me.dead>0)me.dead=Math.max(.01,me.dead-dt);
+ moveP(me,inp,dt,o);me.target=facing(me);G.elapsed+=dt;
  if(inp.act)NET.pr++;if(inp.dash)NET.ds++;
  NET.sendT-=dt;if(NET.sendT<=0||inp.act||inp.dash){netSend({t:'in',x:R2(me.x),z:R2(me.z),dx:R2(me.dir.x),dz:R2(me.dir.z),mv:me.moving?1:0,w:R2(me.walk),pr:NET.pr,ds:NET.ds,h:inp.actH?1:0,tg:me.target?[me.target.x,me.target.z]:null});NET.sendT=1/30;}
  G.time=Math.max(0,G.time-dt);for(const o2 of G.orders){o2.t-=dt;o2.age+=dt;}
@@ -117,11 +122,11 @@ function updFx(dt){if(!G)return;for(const q of G.parts){q.x+=q.vx*dt;q.y+=q.vy*d
 const ov=document.getElementById('overlay');
 function show(html){ov.innerHTML=html;ov.classList.remove('hidden');}
 function hide(){ov.classList.add('hidden');ov.innerHTML='';}
-const starsHtml=n=>{let s='';for(let i=0;i<3;i++)s+=i<n?'<span class="on">★</span>':'<span class="off">★</span>';return s;};
+const starsHtml=n=>{let s='';for(let i=0;i<4;i++)s+=i<n?'<span class="on">★</span>':'<span class="off">★</span>';return s;};
 const KEYS=`<div class="keys"><div><span class="pad"><kbd>↑</kbd><br><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span><span>bouger</span></div><div><kbd class="space">Espace</kbd><span>prendre · poser<br>rester appuyé : couper, laver</span></div><div><kbd class="shift">Maj</kbd><span>sprint</span></div></div>`;
 function showMsg(t){state='lobby';show(`<div class="card"><h2>${t}</h2></div>`);}
 function titleScreen(){state='title';const pre=(location.hash||'').replace('#','').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);
- show(`<div class="card"><h1>Cuisine<br><span>en Duo</span></h1><p class="sub">Cuisinez à deux, chacun sur son ordinateur.</p>
+ show(`<div class="card"><h1>Chaud<br><span>Devant !</span></h1><p class="sub">Cuisinez à deux, chacun sur son ordinateur.</p>
  <div class="lobby"><div><button class="btn big" data-act="create">Créer une salle</button></div><div><input id="joinCode" maxlength="4" placeholder="CODE" value="${pre}" autocomplete="off" spellcheck="false"><button class="btn" data-act="join">Rejoindre</button></div></div>
  ${NET.joinErr?`<p class="err">${NET.joinErr}</p>`:''}<p class="tiny"><a href="/miroir">Ancienne version : Cuisine Miroir</a></p></div>`);
  const inp=document.getElementById('joinCode');inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();joinRoom(inp.value);}});inp.addEventListener('input',()=>{inp.value=inp.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);});}
@@ -136,13 +141,16 @@ function charsScreen(){state='chars';const me=meI();choice[me]=mySkin;
  ov.querySelectorAll('canvas[data-s]').forEach(cv=>chefPortrait(cv,+cv.dataset.s,+cv.dataset.p));}
 function setChoice(i){mySkin=(i+SKINS.length)%SKINS.length;choice[meI()]=mySkin;save('skin',mySkin);netSend({t:'skin',i:mySkin});charsScreen();}
 function hostMenu(){netSend({t:'menu'});menuScreen();}
-function menuScreen(){state='menu';show(`<div class="card wide"><h2>Monde 1</h2><div class="levels">${LEVELS.map((L,i)=>`<button class="lvl" data-act="brief" data-i="${i}"><b>${L.num}</b><span>${L.name}</span><em>${starsHtml(BEST[L.id]||0)}</em></button>`).join('')}</div><button class="btn ghost" data-act="tochars">Changer de chef</button></div>`);}
-function guestMenuWait(){state='menu';show(`<div class="card"><h2>Monde 1</h2><p class="sub">Ton partenaire choisit le niveau…</p></div>`);}
+const ALL=/[?&]tout\b/.test(location.search);
+const unlocked=i=>ALL||i===0||(BEST[LEVELS[i-1].id]||0)>=1;
+function menuScreen(){state='menu';const tot=LEVELS.reduce((s,L)=>s+(BEST[L.id]||0),0);
+ show(`<div class="card wide"><h2>Chaud Devant ! <small class="tot">★ ${tot} / ${LEVELS.length*4}</small></h2>${WORLDS.map((Wd,w)=>`<div class="world"><h3>${w+1} · ${Wd.nom}</h3><div class="levels">${LEVELS.map((L,i)=>L.w!==w?'':unlocked(i)?`<button class="lvl" data-act="brief" data-i="${i}"><b>${L.num}</b><span>${L.name}</span><em>${starsHtml(BEST[L.id]||0)}</em></button>`:`<div class="lvl locked"><b>${L.num}</b><span>🔒</span><em class="small">1 ★ au niveau d’avant</em></div>`).join('')}</div></div>`).join('')}<button class="btn ghost" data-act="tochars">Changer de chef</button></div>`);}
+function guestMenuWait(){state='menu';show(`<div class="card"><h2>Chaud Devant !</h2><p class="sub">Ton partenaire choisit le niveau…</p></div>`);}
 function hostBrief(i){netSend({t:'brief',i});briefScreen(i);}
 function briefScreen(i){state='brief';levelIdx=i;NET.ready=[false,false];startLevel(i);const L=LEVELS[i];
- show(`<div class="card"><div class="tag">${L.num}</div><h2>${L.name}</h2><div class="recipes">${L.recipes.map(r=>`<div><canvas width="120" height="90" data-r="${r}"></canvas><span>${RECIPES[r].nom}</span></div>`).join('')}</div>${i===0?KEYS:''}
+ show(`<div class="card"><div class="tag">${L.num}</div><h2>${L.name}</h2><div class="recipes">${L.recipes.map(r=>`<div><canvas width="120" height="90" data-r="${r}"></canvas><span>${RECIPES[r].nom}</span></div>`).join('')}</div>${L.hint?`<p class="hint">${L.hint}</p>`:''}<div class="goal">${L.stars.map((v,k)=>`<span><i>${'★'.repeat(k+1)}</i>${v}</span>`).join('')}<em>plats</em></div>${i===0?KEYS:''}
  <div class="readies"><span id="rd0"></span><span id="rd1"></span></div><button class="btn big" data-act="ready" id="readyBtn">Prêt !</button>${isHost()?'<button class="btn ghost" data-act="menu">Menu</button>':''}</div>`);
- ov.querySelectorAll('canvas[data-r]').forEach(cv=>{const c=cv.getContext('2d');icon(c,cv.dataset.r==='soupe'?'soupe':'salade',60,45,38);});updReady();}
+ ov.querySelectorAll('canvas[data-r]').forEach(cv=>{const c=cv.getContext('2d');icon(c,dishIcon(cv.dataset.r),60,45,38);});updReady();}
 function updReady(){for(const k of [0,1]){const el=document.getElementById('rd'+k);if(el)el.innerHTML=`<i style="background:${PCOL[k]}"></i>${k===meI()?'Toi':'Partenaire'} ${NET.ready[k]?'<b class="ok">✓</b>':'…'}`;}
  const b=document.getElementById('readyBtn');if(b&&NET.ready[meI()]){b.textContent='En attente…';b.disabled=true;}}
 function setReady(){if(state!=='brief'||NET.ready[meI()])return;NET.ready[meI()]=true;netSend({t:'ready'});updReady();tryStart();}
@@ -151,10 +159,10 @@ function go(){hide();state='play';for(const k in pressed)delete pressed[k];NET.l
  const sp=G.players[1];NET.remote=Object.assign({},NET.remote,{x:sp.x,z:sp.z,dx:0,dz:1,mv:0,h:0});}
 function pauseGame(fromNet){if(state!=='play')return;state='pause';if(!fromNet)netSend({t:'pause'});show(`<div class="card"><h2>Pause</h2><button class="btn big" data-act="resume">Reprendre</button>${isHost()?`<button class="btn ghost" data-act="brief" data-i="${levelIdx}">Recommencer</button><button class="btn ghost" data-act="menu">Menu</button>`:''}</div>`);}
 function resumeGame(fromNet){if(state!=='pause')return;hide();state='play';if(!fromNet)netSend({t:'resume'});}
-function endLevel(){state='result';const L=G.L,n=L.stars.filter(v=>G.score>=v).length;const r={idx:levelIdx,n,s:G.score,served:G.served,lost:G.lost};netSend({t:'result',r});showResult(r);}
+function endLevel(){state='result';const L=G.L,n=starsFor(L,G.served);const r={idx:levelIdx,n,s:G.score,served:G.served,lost:G.lost};netSend({t:'result',r});showResult(r);}
 function showResult(r){state='result';const L=LEVELS[r.idx];levelIdx=r.idx;if(r.n>(BEST[L.id]||0)){BEST[L.id]=r.n;save('best',BEST);}SFX0.end();
- const next=r.idx+1<LEVELS.length;
- show(`<div class="card"><div class="tag">${L.num}</div><h2>${L.name}</h2><div class="stars">${starsHtml(r.n)}</div><div class="stats"><div><b>${r.s}</b>points</div><div><b>${r.served}</b>servis</div><div><b>${r.lost}</b>ratés</div></div><p class="small">Étoiles : ${L.stars.join(' · ')}</p>
+ const next=r.idx+1<LEVELS.length&&r.n>=1,toGo=L.stars.find(v=>v>r.served);
+ show(`<div class="card"><div class="tag">${L.num}</div><h2>${r.n?['','Pas mal !','Bien joué !','Excellent !','Parfait !'][r.n]:'Encore un essai ?'}</h2><div class="stars">${starsHtml(r.n)}</div><div class="stats"><div><b>${r.served}</b>plats servis</div><div><b>${r.lost}</b>ratés</div><div><b>${r.s}</b>pièces</div></div><p class="small">${toGo?`Prochaine étoile : ${toGo} plats`:'Toutes les étoiles !'}</p>
  ${isHost()?(next?`<button class="btn big" data-act="brief" data-i="${r.idx+1}">Niveau suivant</button>`:'')+`<button class="btn" data-act="brief" data-i="${r.idx}">Rejouer</button><button class="btn ghost" data-act="menu">Menu</button>`:'<p class="sub">Ton partenaire choisit la suite…</p>'}</div>`);}
 ov.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;audioInit();const a=b.dataset.act;
  if(a==='create')createRoom();else if(a==='join'){const i=document.getElementById('joinCode');joinRoom(i?i.value:'');}
@@ -165,7 +173,7 @@ ov.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)ret
 function onKey(code){audioInit();const ok=code==='Enter'||code==='Space';
  if(state==='chars'){if(code==='ArrowLeft'||code==='KeyA')setChoice(mySkin-1);else if(code==='ArrowRight'||code==='KeyD')setChoice(mySkin+1);else if(ok&&isHost())hostMenu();}
  else if(state==='brief'&&ok)setReady();else if(state==='play'&&(code==='Escape'||code==='KeyP'))pauseGame();else if(state==='pause'&&(code==='Escape'||code==='KeyP'))resumeGame();
- else if(state==='result'&&ok&&isHost()&&levelIdx+1<LEVELS.length)hostBrief(levelIdx+1);}
+ else if(state==='result'&&ok&&isHost()&&levelIdx+1<LEVELS.length&&unlocked(levelIdx+1))hostBrief(levelIdx+1);}
 function updBar(){const r=document.getElementById('status');if(r)r.innerHTML=NET.role?`Salle <b>${NET.code}</b> · ${NET.partner?'2/2':'1/2'}${NET.ping!=null?' · '+NET.ping+' ms':''}`:'';}
 document.getElementById('muteBtn').addEventListener('click',e=>{e.currentTarget.blur();muted=!muted;e.currentTarget.textContent=muted?'🔇':'🔊';});
 document.getElementById('pauseBtn').addEventListener('click',e=>{e.currentTarget.blur();if(state==='play')pauseGame();else if(state==='pause')resumeGame();});
@@ -187,4 +195,4 @@ function frame(now){
 }
 function initGL(){if(R3.tried)return;R3.tried=true;try{if(!r3Init(document.getElementById('gl')))show(`<div class="card"><h2>3D indisponible</h2><p class="small">Ton navigateur ne gère pas WebGL2. Essaie Chrome, Firefox ou Edge à jour.</p></div>`);}catch(e){console.error(e);}}
 resize();startLevel(0);titleScreen();updBar();requestAnimationFrame(frame);
-window.__cm={R3,get G(){return G},get state(){return state},NET,startLevel,go,LEVELS,press,planFor,briefScreen,update};
+window.__cm={R3,get G(){return G},get state(){return state},NET,startLevel,go,LEVELS,press,planFor,briefScreen,update,botSafe,bridgeF,camFor};

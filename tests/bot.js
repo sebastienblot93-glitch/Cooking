@@ -8,26 +8,27 @@ window.__bot=(()=>{
  function me(){const G=cm.G,i=cm.NET.role==='guest'?1:0;return {G,i,p:G.players[i]};}
  function bfs(G,sx,sz,goals,other){const k=(x,z)=>x+','+z,prev={},q=[[sx,sz]];prev[k(sx,sz)]=null;const ox=Math.floor(other.x),oz=Math.floor(other.z);
   while(q.length){const [x,z]=q.shift();if(goals.has(k(x,z))){const path=[];let kk=k(x,z);while(kk){path.unshift(kk.split(',').map(Number));kk=prev[kk];}return path;}
-   for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,nz=z+dz,kk=k(nx,nz);if(nx<0||nz<0||nx>=G.W||nz>=G.H||kk in prev)continue;if(G.tiles[nz][nx].type!=='floor')continue;if(nx===ox&&nz===oz&&!goals.has(kk))continue;prev[kk]=k(x,z);q.push([nx,nz]);}}return null;}
- function moveAxis(p,cx,cz,nx,nz){rel();
+   for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,nz=z+dz,kk=k(nx,nz);if(nx<0||nz<0||nx>=G.W||nz>=G.H||kk in prev)continue;if(!cm.botSafe(nx,nz))continue;if(nx===ox&&nz===oz&&!goals.has(kk))continue;prev[kk]=k(x,z);q.push([nx,nz]);}}return null;}
+ const LA=p=>{const t=cm.G.tiles[Math.floor(p.z)]&&cm.G.tiles[Math.floor(p.z)][Math.floor(p.x)];const k=t&&t.g==='ice'?.38:0;return {x:p.x+(p.vx||0)*k,z:p.z+(p.vz||0)*k};};
+ function moveAxis(p0,cx,cz,nx,nz){rel();const p=LA(p0);
   if(nx!==cx){if(Math.abs(p.z-(cz+.5))>.12){kd(p.z<cz+.5?'ArrowDown':'ArrowUp');return;}kd(nx>cx?'ArrowRight':'ArrowLeft');}
   else{if(Math.abs(p.x-(cx+.5))>.12){kd(p.x<cx+.5?'ArrowRight':'ArrowLeft');return;}kd(nz>cz?'ArrowDown':'ArrowUp');}}
  function step(){
   if(cm.state!=='play'){rel();ku('Space');return;}
-  const {G,i,p}=me();const plan=cm.planFor(p,i);
+  const {G,i,p}=me();if(p.dead>0&&!st.wasDead)window.__deaths=(window.__deaths||0)+1;st.wasDead=p.dead>0;const plan=cm.planFor(p,i);
   if(!plan||!plan.t){rel();ku('Space');st.goal=null;return;}
   const t=plan.t;st.goal=t.type+'('+t.x+','+t.z+')';
   const cx=Math.floor(p.x),cz=Math.floor(p.z),other=G.players[1-i];
-  const adj=[[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dz])=>[t.x+dx,t.z+dz]).filter(([x,z])=>x>=0&&z>=0&&x<G.W&&z<G.H&&G.tiles[z][x].type==='floor');
+  const adj=[[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dz])=>[t.x+dx,t.z+dz]).filter(([x,z])=>x>=0&&z>=0&&x<G.W&&z<G.H&&G.tiles[z][x].type==='floor'&&G.tiles[z][x].g!=='water');
   let path=bfs(G,cx,cz,new Set(adj.map(a=>a.join(','))),other);if(!path)path=bfs(G,cx,cz,new Set(adj.map(a=>a.join(','))),{x:-9,z:-9});
   if(!path){rel();return;}
   if(st.side>0){st.side-=.02;rel();kd(st.sideKey);return;}
   if(path.length>1){ku('Space');const dist=path.length+Math.hypot(p.x-(cx+.5),p.z-(cz+.5));if(st.best===undefined||dist<st.best-.15||st.gk!==st.goal){st.best=dist;st.still=0;st.gk=st.goal;}else st.still+=.02;
-   if(st.still>.7){st.still=0;st.best=undefined;st.side=.3+Math.random()*.3;const [nx,nz]=path[1];st.sideKey=nx!==cx?(Math.random()<.5?'ArrowUp':'ArrowDown'):(Math.random()<.5?'ArrowLeft':'ArrowRight');return;}
+   if(st.still>.7){st.still=0;st.best=undefined;st.side=.3+Math.random()*.3;const [nx,nz]=path[1];const opts=(nx!==cx?[['ArrowUp',0,-1],['ArrowDown',0,1]]:[['ArrowLeft',-1,0],['ArrowRight',1,0]]).filter(([k,dx,dz])=>cm.botSafe(cx+dx,cz+dz));if(!opts.length){st.side=0;return;}st.sideKey=opts[Math.floor(Math.random()*opts.length)][0];return;}
    const [nx,nz]=path[1];moveAxis(p,cx,cz,nx,nz);return;}
-  if(p.target!==t){const dx=t.x-cx,dz=t.z-cz;rel();
-   if(dx!==0&&Math.abs(p.z-(cz+.5))>.15){kd(p.z<cz+.5?'ArrowDown':'ArrowUp');return;}
-   if(dz!==0&&Math.abs(p.x-(cx+.5))>.15){kd(p.x<cx+.5?'ArrowRight':'ArrowLeft');return;}
+  if(p.target!==t){const dx=t.x-cx,dz=t.z-cz,p1=p;rel();{const q=LA(p1);var px=q.x,pz=q.z;}
+   if(dx!==0&&Math.abs(pz-(cz+.5))>.15){kd(pz<cz+.5?'ArrowDown':'ArrowUp');return;}
+   if(dz!==0&&Math.abs(px-(cx+.5))>.15){kd(px<cx+.5?'ArrowRight':'ArrowLeft');return;}
    kd(dx>0?'ArrowRight':dx<0?'ArrowLeft':dz>0?'ArrowDown':'ArrowUp');return;}
   rel();
   if(plan.hold){if(!held['Space']){kd('Space');st.holdT=0;}else{st.holdT+=.02;if(st.holdT>.4&&!p.chopping&&!p.spraying){ku('Space');st.holdT=0;}}return;}

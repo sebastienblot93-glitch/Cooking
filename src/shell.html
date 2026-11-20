@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cuisine en Duo</title>
+<title>Chaud Devant !</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
@@ -39,8 +39,8 @@ h2{font-size:34px;margin:2px 0 10px;color:#2b2140}
 .chr{font-family:inherit;width:96px;border:3px solid transparent;border-radius:16px;background:#f3ead9;padding:2px 0 4px;cursor:pointer;color:#2b2140;font-weight:700}
 .chr canvas{display:block;margin:0 auto}.chr.sel{border-color:#2b2140;background:#fff}
 .levels{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:6px 0 12px}
-.lvl{font-family:inherit;width:200px;border:4px solid #2b2140;border-radius:20px;background:#ffe9b8;padding:12px;cursor:pointer;box-shadow:0 6px 0 #2b2140;color:#2b2140}
-.lvl b{display:block;font-size:30px;color:#e8603c}.lvl span{display:block;font-size:18px;font-weight:700}.lvl em{font-style:normal;font-size:24px}
+.lvl{font-family:inherit;width:170px;border:4px solid #2b2140;border-radius:20px;background:#ffe9b8;padding:12px;cursor:pointer;box-shadow:0 6px 0 #2b2140;color:#2b2140}
+.lvl b{display:block;font-size:30px;color:#e8603c}.lvl>span{display:block;font-size:18px;font-weight:700;min-height:44px}.lvl em span{display:inline}.lvl em{font-style:normal;font-size:24px}
 .on{color:#f2b51a;text-shadow:0 2px 0 #2b2140}.off{color:#d8cdb8}
 .tag{display:inline-block;background:#2b2140;color:#ffd34d;font-weight:800;border-radius:10px;padding:0 12px;font-size:18px}
 .recipes{display:flex;gap:18px;justify-content:center;margin:4px 0 8px}.recipes div{display:flex;flex-direction:column;align-items:center;font-weight:700}
@@ -49,7 +49,12 @@ h2{font-size:34px;margin:2px 0 10px;color:#2b2140}
 kbd{display:inline-block;min-width:34px;padding:3px 8px;margin:2px;border:3px solid #2b2140;border-bottom-width:5px;border-radius:9px;background:#fff;font-family:inherit;font-weight:800;color:#2b2140}
 kbd.space{min-width:150px}kbd.shift{min-width:60px}.pad{text-align:center;line-height:1}
 .readies{display:flex;justify-content:center;gap:24px;margin:8px 0;font-size:18px;font-weight:700}.readies i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px}.ok{color:#2a9d5f}
-.stars{font-size:56px;letter-spacing:.1em}
+.stars{font-size:52px;letter-spacing:.08em}
+.world{margin:4px 0 10px}.world h3{margin:0 0 4px;font-size:20px;color:#6a5a7a;text-align:left;padding-left:6px}
+.tot{font-size:20px;color:#f2b51a;margin-left:10px;white-space:nowrap}
+.lvl.locked{background:#e9e1d2;color:#9a8ea8;cursor:default;box-shadow:0 6px 0 #9a8ea8;border-color:#9a8ea8}.lvl.locked b{color:#9a8ea8}.lvl.locked em{font-size:14px}
+.hint{font-size:19px;font-weight:700;color:#c4573a;margin:4px 0}
+.goal{display:flex;justify-content:center;align-items:baseline;gap:14px;margin:6px 0 8px;font-weight:800;font-size:20px}.goal i{font-style:normal;color:#f2b51a;font-size:15px;display:block;line-height:1;text-shadow:0 1px 0 #2b2140}.goal em{font-style:normal;font-size:15px;color:#6a5a7a;font-weight:700}
 .stats{display:flex;justify-content:center;gap:26px;margin:6px 0}.stats div{font-size:15px;color:#6a5a7a}.stats b{display:block;font-size:34px;color:#2b2140}
 #tools{position:fixed;top:12px;right:12px;display:flex;gap:8px;align-items:center;z-index:5}
 #tools button{font-family:inherit;font-size:18px;width:44px;height:44px;border-radius:14px;border:3px solid #2b2140;background:#fffaf0;cursor:pointer;box-shadow:0 4px 0 #2b2140}

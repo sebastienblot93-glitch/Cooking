@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cuisine en Duo</title>
+<title>Chaud Devant !</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
@@ -39,8 +39,8 @@ h2{font-size:34px;margin:2px 0 10px;color:#2b2140}
 .chr{font-family:inherit;width:96px;border:3px solid transparent;border-radius:16px;background:#f3ead9;padding:2px 0 4px;cursor:pointer;color:#2b2140;font-weight:700}
 .chr canvas{display:block;margin:0 auto}.chr.sel{border-color:#2b2140;background:#fff}
 .levels{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:6px 0 12px}
-.lvl{font-family:inherit;width:200px;border:4px solid #2b2140;border-radius:20px;background:#ffe9b8;padding:12px;cursor:pointer;box-shadow:0 6px 0 #2b2140;color:#2b2140}
-.lvl b{display:block;font-size:30px;color:#e8603c}.lvl span{display:block;font-size:18px;font-weight:700}.lvl em{font-style:normal;font-size:24px}
+.lvl{font-family:inherit;width:170px;border:4px solid #2b2140;border-radius:20px;background:#ffe9b8;padding:12px;cursor:pointer;box-shadow:0 6px 0 #2b2140;color:#2b2140}
+.lvl b{display:block;font-size:30px;color:#e8603c}.lvl>span{display:block;font-size:18px;font-weight:700;min-height:44px}.lvl em span{display:inline}.lvl em{font-style:normal;font-size:24px}
 .on{color:#f2b51a;text-shadow:0 2px 0 #2b2140}.off{color:#d8cdb8}
 .tag{display:inline-block;background:#2b2140;color:#ffd34d;font-weight:800;border-radius:10px;padding:0 12px;font-size:18px}
 .recipes{display:flex;gap:18px;justify-content:center;margin:4px 0 8px}.recipes div{display:flex;flex-direction:column;align-items:center;font-weight:700}
@@ -49,7 +49,12 @@ h2{font-size:34px;margin:2px 0 10px;color:#2b2140}
 kbd{display:inline-block;min-width:34px;padding:3px 8px;margin:2px;border:3px solid #2b2140;border-bottom-width:5px;border-radius:9px;background:#fff;font-family:inherit;font-weight:800;color:#2b2140}
 kbd.space{min-width:150px}kbd.shift{min-width:60px}.pad{text-align:center;line-height:1}
 .readies{display:flex;justify-content:center;gap:24px;margin:8px 0;font-size:18px;font-weight:700}.readies i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px}.ok{color:#2a9d5f}
-.stars{font-size:56px;letter-spacing:.1em}
+.stars{font-size:52px;letter-spacing:.08em}
+.world{margin:4px 0 10px}.world h3{margin:0 0 4px;font-size:20px;color:#6a5a7a;text-align:left;padding-left:6px}
+.tot{font-size:20px;color:#f2b51a;margin-left:10px;white-space:nowrap}
+.lvl.locked{background:#e9e1d2;color:#9a8ea8;cursor:default;box-shadow:0 6px 0 #9a8ea8;border-color:#9a8ea8}.lvl.locked b{color:#9a8ea8}.lvl.locked em{font-size:14px}
+.hint{font-size:19px;font-weight:700;color:#c4573a;margin:4px 0}
+.goal{display:flex;justify-content:center;align-items:baseline;gap:14px;margin:6px 0 8px;font-weight:800;font-size:20px}.goal i{font-style:normal;color:#f2b51a;font-size:15px;display:block;line-height:1;text-shadow:0 1px 0 #2b2140}.goal em{font-style:normal;font-size:15px;color:#6a5a7a;font-weight:700}
 .stats{display:flex;justify-content:center;gap:26px;margin:6px 0}.stats div{font-size:15px;color:#6a5a7a}.stats b{display:block;font-size:34px;color:#2b2140}
 #tools{position:fixed;top:12px;right:12px;display:flex;gap:8px;align-items:center;z-index:5}
 #tools button{font-family:inherit;font-size:18px;width:44px;height:44px;border-radius:14px;border:3px solid #2b2140;background:#fffaf0;cursor:pointer;box-shadow:0 4px 0 #2b2140}
@@ -189,16 +194,29 @@ function r3Render(W,H,cam){
 function r3Project(p){const v=M4.xform(R3.VP,p);return {x:(v[0]*.5+.5)*R3.W,y:(1-(v[1]*.5+.5))*R3.H,ok:v[3]>0};}
 
 // ================= DONNÉES ET LOGIQUE (cuisine partagée) =================
-const CH=0.92,SPEED=4.4,DASH=10.5,CHOPT=2.0,WASHT=1.6,COOKT=11,BURNT=9,EXT=1.4,DIRTYT=7;
-const TYPE={'.':'floor','1':'floor','2':'floor','#':'counter','t':'crate','l':'crate','C':'board','F':'stove','P':'rack','W':'sink','D':'dirty','S':'serve','X':'trash','E':'counter'};
-const CRATE={t:'tomate',l:'laitue'};
-const CHOP=new Set(['tomate','laitue']);
+const CH=0.92,SPEED=4.4,DASH=10.5,CHOPT=2.0,WASHT=1.6,COOKT=11,BURNT=9,EXT=1.4,DIRTYT=7,BELTT=1.1,CONVV=1.8,DEADT=3;
+// Légende des plans :
+//  .  sol        1 2 départs     #  comptoir     E  comptoir de l'extincteur
+//  t l o  caisses (tomate, laitue, oignon)       C  planche     F  feu + marmite
+//  P  assiettes propres   W  plonge   D  retour de vaisselle   S  passe   X  poubelle
+//  *  glace      ~  eau          =  pont A       -  pont B (en alternance)
+//  > < ^ v  tapis roulants au sol (poussent les chefs)
+//  } { ) (  convoyeurs à objets (vers la droite, la gauche, le bas, le haut)
+const TYPE={'#':'counter','E':'counter','t':'crate','l':'crate','o':'crate','C':'board','F':'stove','P':'rack','W':'sink','D':'dirty','S':'serve','X':'trash','}':'belt','{':'belt',')':'belt','(':'belt'};
+const GROUND={'*':'ice','~':'water','=':'bridgeA','-':'bridgeB','>':'conv','<':'conv','^':'conv','v':'conv'};
+const DIRS={'>':[1,0],'<':[-1,0],'v':[0,1],'^':[0,-1],'}':[1,0],'{':[-1,0],')':[0,1],'(':[0,-1]};
+const CRATE={t:'tomate',l:'laitue',o:'oignon'};
+const CHOP=new Set(['tomate','laitue','oignon']);
+const SOUPING={tomate:'soupe',oignon:'soupe_oignon'};   // ingrédient → contenu de l'assiette
+const SOUPS=new Set(Object.values(SOUPING));
 const RECIPES={
- soupe:{nom:'Soupe de tomate',items:['soupe'],pipe:['tomate','tomate','tomate','pot']},
+ soupe:{nom:'Soupe de tomate',items:['soupe'],pipe:['tomate','tomate','tomate','pot'],ing:'tomate'},
+ oignon:{nom:'Soupe à l’oignon',items:['soupe_oignon'],pipe:['oignon','oignon','oignon','pot'],ing:'oignon'},
  salade:{nom:'Salade',items:['laitue_coupe','tomate_coupe'],pipe:['laitue','tomate','knife']}
 };
+const WORLDS=[{nom:'Le Bistrot'},{nom:'Terrains piégés'}];
 const LEVELS=[
- {id:'o1',name:'Soupe de tomate',num:'1-1',dur:180,stars:[60,140,220],recipes:['soupe'],first:['soupe','soupe'],interval:20,patience:80,maxOrders:4,plates:3,
+ {id:'o1',w:0,num:'1-1',name:'Soupe de tomate',dur:180,stars:[3,6,9,12],recipes:['soupe'],first:['soupe','soupe'],interval:15,patience:80,maxOrders:4,plates:3,
   theme:{body:'#2f8f9d',top:'#d9b07a',floor:'#e6d8bf',wall:'#a7dccf',trim:'#f2c14e'},
   map:["##tt#CC#FF#",
        "#.........S",
@@ -207,7 +225,7 @@ const LEVELS=[
        "E.1....2..#",
        "#.........#",
        "##PW#######"]},
- {id:'o2',name:'Salade et soupe',num:'1-2',dur:180,stars:[80,180,280],recipes:['soupe','salade'],first:['salade','soupe','salade'],interval:16,patience:85,maxOrders:4,plates:4,
+ {id:'o2',w:0,num:'1-2',name:'Salade et soupe',dur:180,stars:[3,6,8,10],recipes:['soupe','salade'],first:['salade','soupe','salade'],interval:14,patience:85,maxOrders:4,plates:4,
   theme:{body:'#c4573a',top:'#d9b07a',floor:'#dfe6ea',wall:'#f3c9a7',trim:'#2f8f9d'},
   map:["#tl#CC#FF##",
        "#.........S",
@@ -215,50 +233,127 @@ const LEVELS=[
        "X...#..#..#",
        "#.1.....2.#",
        "E.........#",
-       "##PW##C####"]}
+       "##PW##C####"]},
+ {id:'o3',w:0,num:'1-3',name:'Coup de feu',dur:180,stars:[3,6,8,10],recipes:['soupe','oignon'],first:['oignon','soupe','oignon'],interval:14,patience:80,maxOrders:4,plates:4,hint:'Nouvel ingrédient : l’oignon',
+  theme:{body:'#6b4fa0',top:'#e0b884',floor:'#efe2cc',wall:'#f6d78b',trim:'#c4573a'},
+  map:["#to#CC#FFF#",
+       "#.........S",
+       "X..#..#...D",
+       "#..#..#...#",
+       "E.1....2..#",
+       "#.........#",
+       "##PW#C#####"]},
+ {id:'t1',w:1,num:'2-1',name:'Le passe-plat',dur:180,stars:[3,6,9,11],recipes:['soupe','salade'],first:['soupe','salade','soupe'],interval:15,patience:90,maxOrders:4,plates:4,hint:'Un comptoir vous sépare : passez-vous les ingrédients.',
+  theme:{body:'#3d7a4f',top:'#d9b07a',floor:'#e9dfc9',wall:'#bfe0c0',trim:'#e8603c'},
+  map:["#tt#l#FF#S#",
+       "C....#....D",
+       "#....#....#",
+       "C.1..#..2.#",
+       "#....#....E",
+       "X....#....#",
+       "###C##PW###"]},
+ {id:'t2',w:1,num:'2-2',name:'La patinoire',dur:180,stars:[2,4,6,8],recipes:['soupe','salade'],first:['soupe','salade','soupe'],interval:16,patience:90,maxOrders:4,plates:4,hint:'Sol gelé : ça glisse !',
+  theme:{body:'#4a78a8',top:'#e8eef4',floor:'#dff2fa',wall:'#cfe7f5',trim:'#ffffff',snow:1},
+  map:["#tl#CC#FF#S#",
+       "#**********D",
+       "X**#****#**#",
+       "#*1*****2**#",
+       "E**#****#**#",
+       "#**********#",
+       "##PW##C#####"]},
+ {id:'t3',w:1,num:'2-3',name:'Le pont-levis',dur:180,stars:[3,5,7,9],recipes:['soupe','salade'],first:['soupe','salade','soupe'],interval:16,patience:95,maxOrders:4,plates:4,bridge:{period:16,up:.6},hint:'Les ponts montent et descendent. Gare à l’eau !',
+  theme:{body:'#8a5a36',top:'#d9b07a',floor:'#d8d2c4',wall:'#b9c7a5',trim:'#f2c14e'},
+  map:["#tl#C~~#FFS#",
+       "#....~~....D",
+       "C....==....#",
+       "#.1..~~..2.#",
+       "X....~~....E",
+       "#....--....#",
+       "#....~~....#",
+       "##C##~~#PW##"]},
+ {id:'t4',w:1,num:'2-4',name:'L’usine',dur:180,stars:[4,7,10,12],recipes:['soupe','oignon','salade'],first:['soupe','salade','oignon'],interval:14,patience:90,maxOrders:4,plates:4,hint:'Les tapis roulants vous emportent.',
+  theme:{body:'#596273',top:'#c9ced6',floor:'#d9d6cf',wall:'#e3c08a',trim:'#f2c14e'},
+  map:["#tlo#CC##FFS#",
+       "#...........D",
+       "#.>>>>>>>>>.#",
+       "X.1..}}}}..2#",
+       "#.<<<<<<<<<.#",
+       "E...........#",
+       "##PW#C##C####"]}
 ];
-const COURSES=['Monde 1'];
 const key=it=>it?(it.st?it.k+'_'+it.st:it.k):'';
 function subMulti(a,b){const m={};for(const x of b)m[x]=(m[x]||0)+1;for(const x of a){if(!m[x])return false;m[x]--;}return true;}
 function sameMulti(a,b){return a.length===b.length&&subMulti(a,b);}
 const rnd=(a,b)=>a+Math.random()*(b-a);
+const NB=[[1,0],[-1,0],[0,1],[0,-1]];
 
 let G=null;
 function buildLevel(idx){
  const L=LEVELS[idx],H=L.map.length,W=L.map[0].length,tiles=[],spawns=[];
- for(let z=0;z<H;z++){const row=[];for(let x=0;x<W;x++){const ch=L.map[z][x],type=TYPE[ch]||'floor';
+ for(let z=0;z<H;z++){if(L.map[z].length!==W)console.warn('Ligne de longueur différente',L.num,z);const row=[];for(let x=0;x<W;x++){const ch=L.map[z][x]||'#',type=TYPE[ch]||'floor';
   const t={ch,type,x,z,item:null,seed:Math.random()};
+  if(type==='floor'&&GROUND[ch]){t.g=GROUND[ch];if(t.g==='conv')t.push=DIRS[ch];}
+  if(type==='belt'){t.bd=DIRS[ch];t.bp=.5;}
   if(type==='crate')t.ing=CRATE[ch];
   if(type==='stove')t.pot={c:[],prog:0,done:false,burn:0,burnt:false},t.fire=0;
   if(type==='rack')t.cnt=L.plates;if(type==='dirty')t.cnt=0;if(type==='sink')t.dirty=0,t.wp=0;
   if(ch==='E')t.item={k:'extincteur'};if(type==='board')t.cp=0;
   if(ch==='1'||ch==='2')spawns[+ch-1]={x:x+.5,z:z+.5};row.push(t);}tiles.push(row);}
-
- const seen=new Set(),q=[[Math.floor(spawns[0].x),Math.floor(spawns[0].z)]];seen.add(q[0].join(','));
- while(q.length){const [x,z]=q.shift();for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){const nx=x+dx,nz=z+dz,k=nx+','+nz;if(nx<0||nz<0||nx>=W||nz>=H||seen.has(k))continue;if(tiles[nz][nx].type!=='floor')continue;seen.add(k);q.push([nx,nz]);}}
- for(const row of tiles)for(const t of row)if(t.type!=='floor'&&t.type!=='counter'&&![[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dz])=>seen.has((t.x+dx)+','+(t.z+dz))))console.warn('Poste inaccessible',t.type,t.x,t.z);
+ // contrôle : chaque poste doit être atteignable par au moins un chef
+ const seen=new Set();for(const s of spawns){const q=[[Math.floor(s.x),Math.floor(s.z)]];seen.add(q[0].join(','));
+  while(q.length){const [x,z]=q.shift();for(const [dx,dz] of NB){const nx=x+dx,nz=z+dz,k=nx+','+nz;if(nx<0||nz<0||nx>=W||nz>=H||seen.has(k))continue;const t=tiles[nz][nx];if(t.type!=='floor'||t.g==='water')continue;seen.add(k);q.push([nx,nz]);}}}
+ for(const row of tiles)for(const t of row)if(t.type!=='floor'&&t.type!=='counter'&&!NB.some(([dx,dz])=>seen.has((t.x+dx)+','+(t.z+dz))))console.warn('Poste inaccessible',L.num,t.type,t.x,t.z);
  return {L,W,H,tiles,spawns};
 }
 function startLevel(idx){
  levelIdx=idx;const B=buildLevel(idx),L=B.L;
- G={idx,L,W:B.W,H:B.H,tiles:B.tiles,time:L.dur,elapsed:0,score:0,served:0,lost:0,streak:0,tipsMax:0,
-  orders:[],next:.5,nOrders:0,dirtyQ:[],fx:[],floats:[],parts:[],
-  players:[0,1].map(i=>({i,x:B.spawns[i].x,z:B.spawns[i].z,dir:{x:0,z:1},held:null,walk:0,moving:false,working:false,workTile:null,target:null,dash:0,dashCd:0,sayCd:0,last:'',snd:0,skin:choice[i]}))};
+ G={idx,L,W:B.W,H:B.H,tiles:B.tiles,spawns:B.spawns,time:L.dur,elapsed:0,score:0,served:0,lost:0,streak:0,
+  orders:[],next:.5,nOrders:0,dirtyQ:[],fx:[],floats:[],parts:[],bridgeState:{},
+  players:[0,1].map(i=>({i,x:B.spawns[i].x,z:B.spawns[i].z,vx:0,vz:0,dir:{x:0,z:1},held:null,walk:0,moving:false,working:false,workTile:null,target:null,dash:0,dashCd:0,sayCd:0,last:'',snd:0,skin:choice[i],dead:0,await:false}))};
 }
 const T=(x,z)=>G&&x>=0&&z>=0&&x<G.W&&z<G.H?G.tiles[z][x]:null;
 const all=f=>{const r=[];for(const row of G.tiles)for(const t of row)if(f(t))r.push(t);return r;};
 const solid=(x,z)=>{const t=T(x,z);return !t||t.type!=='floor';};
 function collides(x,z,r){return solid(Math.floor(x-r),Math.floor(z-r))||solid(Math.floor(x+r),Math.floor(z-r))||solid(Math.floor(x-r),Math.floor(z+r))||solid(Math.floor(x+r),Math.floor(z+r));}
+
+// ---------- terrain ----------
+// Ponts : déterministes à partir du temps écoulé (identiques chez les deux joueurs)
+function bridgePhase(g){const B=G.L.bridge;if(!B)return null;const per=B.period;return {per,up:B.up*per,ph:(G.elapsed+(g==='bridgeB'?per/2:0)+per*.5)%per};}
+function bridgeF(g){const b=bridgePhase(g);if(!b)return 1;const tr=.7,{ph,up}=b;if(ph<tr)return ph/tr;if(ph<up-tr)return 1;if(ph<up)return (up-ph)/tr;return 0;}
+function bridgeLeft(g){const b=bridgePhase(g);if(!b)return 99;return b.ph<b.up?b.up-b.ph:-(b.per-b.ph);}   // >0 : secondes avant la descente ; <0 : avant la montée
+const isBridge=t=>t.g==='bridgeA'||t.g==='bridgeB';
+const deadly=t=>!!t&&t.type==='floor'&&(t.g==='water'||isBridge(t)&&bridgeF(t.g)<.5);
+const groundAt=(x,z)=>T(Math.floor(x),Math.floor(z));
+
 function moveP(p,inp,dt,other){
+ if(p.dead>0){p.moving=false;p.walk=0;p.vx=p.vz=0;return;}
  const len=Math.hypot(inp.mx,inp.my);p.moving=len>.2;p.dashCd=Math.max(0,p.dashCd-dt);p.dash=Math.max(0,p.dash-dt);
  if(inp.dash&&p.dashCd<=0){p.dash=.17;p.dashCd=.7;emitLocal({s:'dash'});}
- if(p.moving||p.dash>0){let nx=p.dir.x,nz=p.dir.z;if(p.moving){nx=inp.mx/len;nz=inp.my/len;p.dir={x:nx,z:nz};}
-  const sp=(p.dash>0?DASH:SPEED*Math.min(1,len))*dt,r=.3;
-  if(!collides(p.x+nx*sp,p.z,r))p.x+=nx*sp;if(!collides(p.x,p.z+nz*sp,r))p.z+=nz*sp;p.walk+=dt*(p.dash>0?22:13);}
- else p.walk=0;
- if(other){const dx=p.x-other.x,dz=p.z-other.z,d=Math.hypot(dx,dz);if(d<.62&&d>1e-4){const push=(.62-d)/2;const ux=dx/d,uz=dz/d;if(!collides(p.x+ux*push,p.z,.3))p.x+=ux*push;if(!collides(p.x,p.z+uz*push,.3))p.z+=uz*push;}}
+ const g=groundAt(p.x,p.z),ice=g&&g.g==='ice';
+ let tx=0,tz=0;
+ if(p.moving){const nx=inp.mx/len,nz=inp.my/len;p.dir={x:nx,z:nz};const s=SPEED*Math.min(1,len);tx=nx*s;tz=nz*s;}
+ if(p.dash>0){tx=p.dir.x*DASH;tz=p.dir.z*DASH;}
+ if(ice){const k=Math.min(1,dt*(p.dash>0?5:p.moving?2.6:1.1));p.vx+=(tx-p.vx)*k;p.vz+=(tz-p.vz)*k;}else{p.vx=tx;p.vz=tz;}
+ let mx=p.vx,mz=p.vz;if(g&&g.push){mx+=g.push[0]*CONVV;mz+=g.push[1]*CONVV;}
+ const r=.3;
+ if(!collides(p.x+mx*dt,p.z,r))p.x+=mx*dt;else p.vx*=ice?-.25:0;
+ if(!collides(p.x,p.z+mz*dt,r))p.z+=mz*dt;else p.vz*=ice?-.25:0;
+ if(p.moving||p.dash>0)p.walk+=dt*(p.dash>0?22:13);else if(Math.hypot(mx,mz)>.6)p.walk+=dt*4;else p.walk=0;
+ if(other&&!(other.dead>0)){const dx=p.x-other.x,dz=p.z-other.z,d=Math.hypot(dx,dz);if(d<.62&&d>1e-4){const push=(.62-d)/2;const ux=dx/d,uz=dz/d;if(!collides(p.x+ux*push,p.z,.3))p.x+=ux*push;if(!collides(p.x,p.z+uz*push,.3))p.z+=uz*push;}}
 }
+function fall(p){
+ p.dead=DEADT;p.working=false;p.workTile=null;p.target=null;p.spraying=false;p.chopping=false;p.vx=p.vz=0;
+ emitLocal({s:'splash'});burst(p.x,.2,p.z,'#7cc3e6',16);fx(p.x,p.z,'Plouf !','#bfe8ff',1);
+ const h=p.held;p.held=null;if(!h)return;
+ // les assiettes reviennent sales, l'extincteur retourne à sa place, le reste est perdu
+ if(h.k==='assiette')G.dirtyQ.push(DIRTYT);
+ else if(h.k==='sales')for(let i=0;i<h.n;i++)G.dirtyQ.push(DIRTYT);
+ else if(h.k==='extincteur'){const e=all(t=>t.ch==='E'&&!t.item)[0]||all(t=>t.type==='counter'&&!t.item)[0];if(e)e.item=h;}
+}
+function respawn(p){const s=G.spawns[p.i];p.dead=0;p.x=s.x;p.z=s.z;p.vx=p.vz=0;p.dir={x:0,z:1};p.await=true;emitLocal({s:'pop'});burst(s.x,.6,s.z,'#ffffff',10,'steam');}
+
 function facing(p){
+ if(p.dead>0)return null;
  const tx=Math.floor(p.x),tz=Math.floor(p.z);let best=null,bs=1e9;
  for(let z=tz-1;z<=tz+1;z++)for(let x=tx-1;x<=tx+1;x++){const t=T(x,z);if(!t||t.type==='floor')continue;
   const cx=Math.max(x,Math.min(x+1,p.x)),cz=Math.max(z,Math.min(z+1,p.z)),d=Math.hypot(cx-p.x,cz-p.z);if(d>.75)continue;
@@ -282,8 +377,11 @@ function say(p,txt){if(p.sayCd>0&&p.last===txt)return;p.sayCd=1.4;p.last=txt;emi
 
 // ---------- Interactions ----------
 const PLATEABLE=new Set(['tomate_coupe','laitue_coupe']);
-function plateAccepts(pl,k){if(pl.c.includes('soupe'))return false;const cand=[...pl.c,k];return G.L.recipes.some(r=>subMulti(cand,RECIPES[r].items));}
+const hasSoup=c=>c.some(x=>SOUPS.has(x));
+function plateAccepts(pl,k){if(hasSoup(pl.c))return false;const cand=[...pl.c,k];return G.L.recipes.some(r=>subMulti(cand,RECIPES[r].items));}
 function potReady(t){return t.pot&&t.pot.done&&!t.pot.burnt&&!t.fire;}
+function potTakes(t,ing){const pot=t.pot;return !!SOUPING[ing]&&!pot.burnt&&!pot.done&&!t.fire&&pot.c.length<3&&(!pot.c.length||pot.c[0]===ing);}
+function emptyPot(pot){pot.c=[];pot.prog=0;pot.done=false;pot.burn=0;pot.burnt=false;}
 function press(p){
  const t=p.target,h=p.held;if(!t)return;
  if(t.fire>0){say(p,'Au feu ! Prends l’extincteur');return;}
@@ -292,7 +390,7 @@ function press(p){
   case 'rack':
    if(!h){if(t.cnt>0){t.cnt--;p.held={k:'assiette',c:[]};emitLocal({s:'pick'});}else say(p,'Plus d’assiette propre : à la plonge !');}
    else if(h.k==='assiette'&&!h.c.length){t.cnt++;p.held=null;emitLocal({s:'drop'});}
-   else if(PLATEABLE.has(key(h))&&t.cnt>0){const pl={k:'assiette',c:[key(h)]};if(plateAccepts({c:[]},key(h))){t.cnt--;p.held=pl;emitLocal({s:'pick'});}}
+   else if(PLATEABLE.has(key(h))&&t.cnt>0){if(plateAccepts({c:[]},key(h))){t.cnt--;p.held={k:'assiette',c:[key(h)]};emitLocal({s:'pick'});}}
    break;
   case 'dirty':if(!h&&t.cnt>0){p.held={k:'sales',n:t.cnt};t.cnt=0;emitLocal({s:'pick'});}else if(h&&h.k==='sales'){t.cnt+=h.n;p.held=null;emitLocal({s:'drop'});}break;
   case 'sink':if(h&&h.k==='sales'){t.dirty+=h.n;p.held=null;emitLocal({s:'splash'});}else if(!h&&t.dirty>0){p.working=true;p.workTile=t;}else if(!h)say(p,'Rien à laver');break;
@@ -306,9 +404,10 @@ function press(p){
    if(!h){break;}if(h.k!=='assiette'||!h.c.length){say(p,'Apporte une assiette garnie');break;}serve(p,t);break;
   case 'stove':{
    const pot=t.pot;
-   if(!h){if(pot.burnt){pot.c=[];pot.prog=0;pot.done=false;pot.burn=0;pot.burnt=false;emitLocal({s:'drop'});say(p,'Marmite vidée');}break;}
-   if(h.k==='assiette'){if(potReady(t)&&!h.c.length){h.c=['soupe'];pot.c=[];pot.prog=0;pot.done=false;pot.burn=0;emitLocal({s:'pick'});}else if(potReady(t))say(p,'Il faut une assiette vide');else say(p,pot.c.length?'Pas encore cuit…':'La marmite est vide');break;}
-   if(key(h)==='tomate_coupe'){if(pot.c.length<3&&!pot.burnt&&!pot.done){pot.c.push('tomate');p.held=null;emitLocal({s:'plop'});burst(t.x+.5,CH+.4,t.z+.5,'#ff8a6a',5);}else say(p,'La marmite est pleine');}
+   if(!h){if(pot.burnt){emptyPot(pot);emitLocal({s:'drop'});say(p,'Marmite vidée');}break;}
+   if(h.k==='assiette'){if(potReady(t)&&!h.c.length){h.c=[SOUPING[pot.c[0]]];emptyPot(pot);emitLocal({s:'pick'});}else if(potReady(t))say(p,'Il faut une assiette vide');else say(p,pot.c.length?'Pas encore cuit…':'La marmite est vide');break;}
+   if(h.st==='coupe'&&SOUPING[h.k]){if(potTakes(t,h.k)){pot.c.push(h.k);p.held=null;emitLocal({s:'plop'});burst(t.x+.5,CH+.4,t.z+.5,h.k==='oignon'?'#f3e1a8':'#ff8a6a',5);}
+    else say(p,pot.done||pot.c.length>=3?'La marmite est pleine':'Pas le même ingrédient');}
    else if(h.st==='cru')say(p,'Coupe-la d’abord !');else say(p,'Pas dans la soupe');
    break;}
   case 'board':
@@ -317,9 +416,9 @@ function press(p){
    if(h&&!t.item){if(h.st==='cru'){t.item=h;p.held=null;emitLocal({s:'drop'});}else say(p,'Seulement des produits crus');break;}
    if(h&&h.k==='assiette'&&t.item&&t.item.st==='coupe'){if(plateAccepts(h,key(t.item))){h.c.push(key(t.item));t.item=null;emitLocal({s:'drop'});}else say(p,'Ça ne va pas ensemble');}
    break;
-  case 'counter':
+  case 'counter':case 'belt':
    if(!h&&t.item){p.held=t.item;t.item=null;emitLocal({s:'pick'});break;}
-   if(h&&!t.item){t.item=h;p.held=null;emitLocal({s:'drop'});break;}
+   if(h&&!t.item){t.item=h;t.bp=.5;p.held=null;emitLocal({s:'drop'});break;}
    if(h&&t.item){
     if(h.k==='assiette'&&PLATEABLE.has(key(t.item))){if(plateAccepts(h,key(t.item))){h.c.push(key(t.item));t.item=null;emitLocal({s:'drop'});}else say(p,'Ça ne va pas ensemble');}
     else if(t.item.k==='assiette'&&PLATEABLE.has(key(h))){if(plateAccepts(t.item,key(h))){t.item.c.push(key(h));p.held=null;emitLocal({s:'drop'});}else say(p,'Ça ne va pas ensemble');}
@@ -330,9 +429,10 @@ function press(p){
 }
 function work(p,dt){
  const t=p.workTile;if(!t){p.working=false;return;}p.chopping=true;
+ const col=k=>k==='tomate'?'#e0412f':k==='oignon'?'#f3e1a8':'#79c95a';
  if(t.type==='board'){const it=t.item;if(!it||it.st!=='cru'){p.working=false;return;}it.cp+=dt/CHOPT;p.snd-=dt;if(p.snd<=0){emitLocal({s:'chop'});p.snd=.2;}
-  if(Math.random()<dt*7)burst(t.x+.5,CH+.15,t.z+.5,it.k==='tomate'?'#e0412f':'#79c95a',1);
-  if(it.cp>=1){it.st='coupe';it.cp=0;p.working=false;burst(t.x+.5,CH+.2,t.z+.5,it.k==='tomate'?'#e0412f':'#79c95a',8);emitLocal({s:'done'});}}
+  if(Math.random()<dt*7)burst(t.x+.5,CH+.15,t.z+.5,col(it.k),1);
+  if(it.cp>=1){it.st='coupe';it.cp=0;p.working=false;burst(t.x+.5,CH+.2,t.z+.5,col(it.k),8);emitLocal({s:'done'});}}
  else if(t.type==='sink'){if(t.dirty<=0){p.working=false;return;}t.wp+=dt/WASHT;p.snd-=dt;if(p.snd<=0){emitLocal({s:'scrub'});p.snd=.35;}
   if(Math.random()<dt*8)burst(t.x+.5,CH+.25,t.z+.5,'#d8f1ff',1,'steam');
   if(t.wp>=1){t.wp=0;t.dirty--;const r=all(x=>x.type==='rack')[0];if(r)r.cnt++;emitLocal({s:'done'});}}
@@ -345,93 +445,127 @@ function spray(p,dt){
  if(Math.random()<dt*30)G.parts.push({x:p.x+p.dir.x*.5,y:1.0,z:p.z+p.dir.z*.5,vx:p.dir.x*5+rnd(-.6,.6),vy:rnd(-.2,.6),vz:p.dir.z*5+rnd(-.6,.6),g:0,life:.5,max:.5,col:'rgba(255,255,255,.9)',r:rnd(5,9),kind:'steam'});
  p.snd-=dt;if(p.snd<=0){emitLocal({s:'spray'});p.snd=.25;}
 }
+function starsFor(L,served){return L.stars.filter(v=>served>=v).length;}
 function serve(p,t){
  const pl=p.held,i=G.orders.findIndex(o=>sameMulti(pl.c,RECIPES[o.r].items));
  if(i<0){say(p,'Personne n’a commandé ça');emitLocal({s:'fail'});return;}
  const o=G.orders[i];G.streak=Math.min(4,G.streak+1);
+ const before=starsFor(G.L,G.served);
  const tip=Math.round(8*o.t/o.max)*G.streak,pts=20+tip;G.score+=pts;G.served++;G.orders.splice(i,1);p.held=null;
  fx(t.x+.5,t.z+.5,'+'+pts+(G.streak>1?'  ×'+G.streak:''),'#ffd34d',1);emitLocal({s:'serve'});burst(t.x+.5,CH+.3,t.z+.5,'#ffd34d',14);
+ if(starsFor(G.L,G.served)>before){emitLocal({s:'star'});emitLocal({f:[G.W/2,2.4,G.H-.5,'★'.repeat(starsFor(G.L,G.served)),'#ffd34d',1]});}
  G.dirtyQ.push(DIRTYT);
 }
 function updOrders(dt){
  const L=G.L,pick=()=>L.first&&G.nOrders<L.first.length?L.first[G.nOrders]:L.recipes[Math.floor(Math.random()*L.recipes.length)];
  for(const o of G.orders){o.t-=dt;o.age+=dt;}
  for(let i=G.orders.length-1;i>=0;i--)if(G.orders[i].t<=0){G.orders.splice(i,1);G.score=Math.max(0,G.score-10);G.lost++;G.streak=0;emitLocal({s:'fail'});emitLocal({f:[G.W/2,2,0,'Commande ratée −10','#ff7a6a',1]});}
- G.next-=dt;if(G.next<=0){if(G.orders.length<L.maxOrders){G.orders.push({r:pick(),t:L.patience,max:L.patience,age:0});G.nOrders++;emitLocal({s:'order'});}G.next=G.nOrders<2?3:L.interval;}
+ if(!G.orders.length&&G.nOrders>=2)G.next=Math.min(G.next,2);G.next-=dt;if(G.next<=0){if(G.orders.length<L.maxOrders){G.orders.push({r:pick(),t:L.patience,max:L.patience,age:0});G.nOrders++;emitLocal({s:'order'});}G.next=G.nOrders<2?3:L.interval;}
+}
+function updBelts(dt){
+ for(const t of all(x=>x.type==='belt')){
+  if(!t.item){t.bp=.5;continue;}
+  const n=T(t.x+t.bd[0],t.z+t.bd[1]),free=!!n&&!n.item&&(n.type==='belt'||n.type==='counter'&&n.ch!=='E');
+  const lim=free?1:.5;if(t.bp<lim)t.bp=Math.min(lim,t.bp+dt/BELTT);
+  if(t.bp>=1&&free){n.item=t.item;n.bp=n.type==='belt'?0:.5;t.item=null;t.bp=.5;}
+ }
 }
 function update(dt){
  G.time-=dt;G.elapsed+=dt;if(G.time<=0){G.time=0;endLevel();return;}
  const [a,b]=G.players;
  control(a,dt,readInput(),b);control(b,dt,remoteInput(b,dt),a);
+ for(const p of G.players){if(p.dead>0){p.dead-=dt;if(p.dead<=0)respawn(p);}else if(deadly(groundAt(p.x,p.z)))fall(p);}
+ if(G.L.bridge)for(const g of ['bridgeA','bridgeB']){const up=bridgeF(g)>.5;if(G.bridgeState[g]!==undefined&&G.bridgeState[g]!==up)emitLocal({s:up?'bridgeUp':'bridgeDown'});G.bridgeState[g]=up;}
  for(const t of all(x=>x.type==='stove')){const pot=t.pot;
   if(t.fire>0){t.fire=Math.min(1,t.fire+dt*.02);continue;}
   if(pot.burnt)continue;
   if(pot.c.length&&!pot.done){pot.prog=Math.min(pot.c.length/3,pot.prog+dt/COOKT);if(pot.c.length===3&&pot.prog>=1){pot.done=true;pot.burn=0;emitLocal({s:'ding'});}}
   else if(pot.done){pot.burn+=dt/BURNT;if(pot.burn>.55){pot.warn=(pot.warn||0)-dt;if(pot.warn<=0){emitLocal({s:'warn'});pot.warn=.5;}}if(pot.burn>=1){pot.burnt=true;pot.done=false;t.fire=.6;emitLocal({s:'fire'});fx(t.x+.5,t.z+.5,'Au feu !','#ff7a3a',1);}}}
+ updBelts(dt);
  for(let i=G.dirtyQ.length-1;i>=0;i--){G.dirtyQ[i]-=dt;if(G.dirtyQ[i]<=0){G.dirtyQ.splice(i,1);const d=all(x=>x.type==='dirty')[0];if(d){d.cnt++;emitLocal({s:'clink'});}}}
  updOrders(dt);
 }
 function control(p,dt,inp,other){
- if(inp.remote){p.moving=inp.mv;}else moveP(p,inp,dt,other);
+ if(inp.remote){p.moving=inp.mv&&!(p.dead>0);}else moveP(p,inp,dt,other);
+ p.sayCd=Math.max(0,p.sayCd-dt);p.chopping=false;
+ if(p.dead>0){p.target=null;p.spraying=false;p.working=false;return;}
  p.target=facing(p);
  if(inp.remote&&inp.tg){const t=T(inp.tg[0],inp.tg[1]);if(t&&t.type!=='floor'&&Math.hypot(t.x+.5-p.x,t.z+.5-p.z)<1.7)p.target=t;}
- p.sayCd=Math.max(0,p.sayCd-dt);p.chopping=false;
  const ext=p.held&&p.held.k==='extincteur',anyFire=all(t=>t.fire>0).length>0;
  if(ext&&anyFire){if(inp.actH){spray(p,dt);p.spraying=true;}else p.spraying=false;}
  else{p.spraying=false;if(inp.act)press(p);}
  if(p.working){if(inp.actH&&p.target===p.workTile)work(p,dt);else p.working=false;}
 }
+
 // ---------- Aide pour les joueurs automatiques (tests) ----------
-function nearest(p,list){let b=null,bd=1e9;for(const t of list){const d=Math.hypot(t.x+.5-p.x,t.z+.5-p.z);if(d<bd){bd=d;b=t;}}return b;}
-function countAll(pred){let n=0;for(const t of all(()=>true)){if(t.item&&pred(t.item))n++;}for(const p of G.players)if(p.held&&pred(p.held))n++;return n;}
+function nearest(p,list){let b=null,bd=1e9;for(const t of list){if(!t)continue;const d=Math.hypot(t.x+.5-p.x,t.z+.5-p.z);if(d<bd){bd=d;b=t;}}return b;}
+function countAll(pred){let n=0;for(const row of G.tiles)for(const t of row){if(t.item&&pred(t.item))n++;}for(const p of G.players)if(p.held&&pred(p.held))n++;return n;}
+// zone où un chef peut marcher (les ponts comptent, pas l'eau)
+function regionFrom(x,z){const k=(a,b)=>a+','+b,seen=new Set([k(x,z)]),q=[[x,z]];
+ while(q.length){const [cx,cz]=q.shift();for(const [dx,dz] of NB){const nx=cx+dx,nz=cz+dz,kk=k(nx,nz);if(seen.has(kk))continue;const t=T(nx,nz);if(!t||t.type!=='floor'||t.g==='water')continue;seen.add(kk);q.push([nx,nz]);}}return seen;}
+function regionOf(p){const s=p.dead>0?G.spawns[p.i]:p;let x=Math.floor(s.x),z=Math.floor(s.z);const t=T(x,z);if(t&&t.g==='water'){const s2=G.spawns[p.i];x=Math.floor(s2.x);z=Math.floor(s2.z);}return regionFrom(x,z);}
+const reachT=(R,t)=>!!t&&NB.some(([dx,dz])=>R.has((t.x+dx)+','+(t.z+dz)));
+function beltEnd(t){let c=t,n=0;while(c&&c.type==='belt'&&n<30){const nx=T(c.x+c.bd[0],c.z+c.bd[1]);if(!nx||!(nx.type==='belt'||nx.type==='counter'&&nx.ch!=='E'))return c;c=nx;n++;}return c;}
+// case praticable pour le bot à cet instant (évite l'eau et les ponts qui vont descendre)
+function botSafe(x,z){const t=T(x,z);if(!t||t.type!=='floor'||t.g==='water')return false;if(isBridge(t)){const l=bridgeLeft(t.g);return bridgeF(t.g)>.95&&l>2.4;}return true;}
 function planFor(p,role){
- const h=p.held,pots=all(t=>t.type==='stove'),rack=all(t=>t.type==='rack')[0],sink=all(t=>t.type==='sink')[0],dirty=all(t=>t.type==='dirty')[0];
- const emptyCounter=()=>nearest(p,all(t=>t.type==='counter'&&!t.item));
- const soupsWanted=G.orders.filter(o=>o.r==='soupe').length,saladsWanted=G.orders.filter(o=>o.r==='salade').length;
- const fire=all(t=>t.fire>0)[0];
+ if(p.dead>0)return null;
+ const o=G.players[1-p.i],R=regionOf(p),R2=regionOf(o),can=t=>reachT(R,t),U=f=>all(t=>f(t)&&reachT(R,t));
+ const partnerCan=t=>reachT(R2,t)||t.type==='belt'&&reachT(R2,beltEnd(t));
+ const h=p.held,pots=all(t=>t.type==='stove');
+ const rack=U(t=>t.type==='rack')[0],sink=U(t=>t.type==='sink')[0],dirty=U(t=>t.type==='dirty')[0],serveT=U(t=>t.type==='serve')[0];
+ const surf=t=>(t.type==='counter'||t.type==='belt')&&t.ch!=='E';
+ const emptyHere=()=>nearest(p,U(t=>surf(t)&&!t.item));
+ const handoff=()=>nearest(p,U(t=>surf(t)&&!t.item&&partnerCan(t)))||emptyHere();
+ const want={};for(const od of G.orders)want[od.r]=(want[od.r]||0)+1;
+ const soupR=ing=>ing==='tomate'?'soupe':'oignon';
+ const inPots=ing=>pots.reduce((s,t)=>s+(t.pot.c[0]===ing&&!t.pot.burnt?(t.pot.done?3:t.pot.c.length):0),0);
+ const plated=ing=>countAll(it=>it.k==='assiette'&&it.c.includes(SOUPING[ing]));
+ const soupNeed=ing=>Math.max(0,(want[soupR(ing)]||0)*3-inPots(ing)-plated(ing)*3);
+ const potFor=ing=>{const ok=pots.filter(t=>potTakes(t,ing));ok.sort((a,b)=>b.pot.c.length-a.pot.c.length);return ok[0];};
+ const saladPlates=()=>countAll(it=>it.k==='assiette'&&!hasSoup(it.c)&&(it.c.length>0||it!==h));
+ const saladNeed=ing=>Math.max(0,(want.salade||0)-countAll(it=>it.k==='assiette'&&it.c.includes(ing+'_coupe')));
+ const fire=all(t=>t.fire>0&&can(t))[0];
  // tout le monde : le feu d'abord
- if(fire){if(h&&h.k==='extincteur')return {t:fire,hold:true};if(!h){const e=all(t=>t.item&&t.item.k==='extincteur')[0];if(e)return {t:e};}else if(role===1)return {t:emptyCounter()};}
+ if(fire){if(h&&h.k==='extincteur')return {t:fire,hold:true};const e=all(t=>t.item&&t.item.k==='extincteur'&&can(t))[0];if(!h){if(e)return {t:e};}else if(e&&(role===1||!o.held||o.held.k!=='extincteur'))return {t:emptyHere()};}
  if(h){
-  if(h.k==='extincteur')return {t:nearest(p,all(t=>t.ch==='E'&&!t.item))||emptyCounter()};
-  if(h.k==='sales')return {t:sink};
+  if(h.k==='extincteur')return {t:nearest(p,U(t=>t.ch==='E'&&!t.item))||emptyHere()};
+  if(h.k==='sales')return {t:sink||handoff()};
   if(h.k==='assiette'){
-   if(h.c.length&&G.orders.some(o=>sameMulti(h.c,RECIPES[o.r].items)))return {t:all(t=>t.type==='serve')[0]};
-   if(!h.c.length){const ready=pots.find(potReady);if(ready)return {t:ready};}
-   const miss=[];for(const o of G.orders){if(subMulti(h.c,RECIPES[o.r].items))miss.push(...RECIPES[o.r].items.filter(x=>!h.c.includes(x)));}
-   const comp=nearest(p,all(t=>(t.type==='counter'||t.type==='board')&&t.item&&miss.includes(key(t.item))));if(comp)return {t:comp};
-   if(!h.c.length&&!saladsWanted)return {t:rack};
-   return {t:emptyCounter()};
+   if(h.c.length&&G.orders.some(od=>sameMulti(h.c,RECIPES[od.r].items)))return {t:serveT||handoff()};
+   if(!h.c.length){const ready=pots.find(t=>potReady(t)&&can(t));if(ready)return {t:ready};}
+   const miss=[];for(const od of G.orders){if(subMulti(h.c,RECIPES[od.r].items))miss.push(...RECIPES[od.r].items.filter(x=>!h.c.includes(x)));}
+   const comp=nearest(p,U(t=>(surf(t)||t.type==='board')&&t.item&&miss.includes(key(t.item))));if(comp)return {t:comp};
+   if(!h.c.length&&!(want.salade>0))return {t:rack||handoff()};
+   return {t:handoff()};
   }
-  if(h.st==='cru')return {t:nearest(p,all(t=>t.type==='board'&&!t.item))||emptyCounter()};
-  if(key(h)==='tomate_coupe'){const inPots=pots.reduce((s,t)=>s+(t.pot.done?3:t.pot.c.length),0);const pot=pots.find(t=>!t.pot.done&&!t.pot.burnt&&t.pot.c.length<3&&!t.fire);
-   if(pot&&inPots<soupsWanted*3)return {t:pot};}
-  const pl=nearest(p,all(t=>t.type==='counter'&&t.item&&t.item.k==='assiette'&&plateAccepts(t.item,key(h))));if(pl)return {t:pl};
-  return {t:emptyCounter()};
+  if(h.st==='cru')return {t:nearest(p,U(t=>t.type==='board'&&!t.item))||handoff()};
+  const k=key(h);
+  if(SOUPING[h.k]&&soupNeed(h.k)>0){const pot=potFor(h.k);if(pot&&can(pot))return {t:pot};if(pot)return {t:handoff()};}
+  const pl=nearest(p,U(t=>surf(t)&&t.item&&t.item.k==='assiette'&&plateAccepts(t.item,k)));if(pl)return {t:pl};
+  return {t:rack&&can(rack)?emptyHere():handoff()};
  }
- const tasks=[];
  // rôle 1 : assiettes, service, plonge
  const serveTasks=()=>{
-  const burnt=pots.find(t=>t.pot.burnt&&!t.fire);if(burnt)return {t:burnt};
-  const full=nearest(p,all(t=>t.type==='counter'&&t.item&&t.item.k==='assiette'&&t.item.c.length&&G.orders.some(o=>sameMulti(t.item.c,RECIPES[o.r].items))));if(full)return {t:full};
-  if(pots.some(potReady)&&rack.cnt>0)return {t:rack};
-  const needPlate=saladsWanted>countAll(it=>it.k==='assiette'&&it.c.some(x=>x!=='soupe'))&&countAll(it=>it.k==='laitue'&&it.st==='coupe')+countAll(it=>it.k==='assiette'&&it.c.includes('laitue_coupe'))>0;
-  if(needPlate&&rack.cnt>0)return {t:rack};
-  if(dirty.cnt>0&&(rack.cnt<2||sink.dirty===0))return {t:dirty};
-  if(sink.dirty>0&&rack.cnt<3)return {t:sink,hold:true};
+  const burnt=pots.find(t=>t.pot.burnt&&!t.fire&&can(t));if(burnt)return {t:burnt};
+  const full=nearest(p,U(t=>surf(t)&&t.item&&t.item.k==='assiette'&&t.item.c.length&&G.orders.some(od=>sameMulti(t.item.c,RECIPES[od.r].items))));if(full&&serveT)return {t:full};
+  if(pots.some(t=>potReady(t)&&can(t))){const lying=nearest(p,U(t=>surf(t)&&t.item&&t.item.k==='assiette'&&!t.item.c.length));if(lying)return {t:lying};if(rack&&rack.cnt>0)return {t:rack};}
+  const cutLet=countAll(it=>it.k==='laitue'&&it.st==='coupe')+countAll(it=>it.k==='tomate'&&it.st==='coupe')>0;
+  if(want.salade>saladPlates()&&cutLet&&rack&&rack.cnt>0)return {t:rack};
+  if(dirty&&dirty.cnt>0&&(!rack||rack.cnt<2||!sink||sink.dirty===0))return {t:dirty};
+  if(sink&&sink.dirty>0&&(!rack||rack.cnt<3))return {t:sink,hold:true};
   return null;};
  // rôle 0 : préparation
  const prepTasks=()=>{
-  const ch=all(t=>t.type==='board'&&t.item&&t.item.st==='cru');if(ch.length)return {t:nearest(p,ch),hold:true};
-  const cut=all(t=>t.type==='board'&&t.item&&t.item.st==='coupe');if(cut.length)return {t:nearest(p,cut)};
-  const loose=all(t=>t.type==='counter'&&t.item&&t.item.k==='tomate'&&t.item.st==='coupe');
-  const potRoom=pots.find(t=>!t.pot.done&&!t.pot.burnt&&t.pot.c.length<3&&!t.fire);
-  const inPots=pots.reduce((s,t)=>s+(t.pot.done?3:t.pot.c.length),0);
-  const tomOut=countAll(it=>it.k==='tomate');
-  if(loose.length&&potRoom&&inPots<soupsWanted*3)return {t:nearest(p,loose)};
-  const tomNeed=Math.max(0,soupsWanted*3-inPots)+Math.max(0,saladsWanted-countAll(it=>it.k==='assiette'&&it.c.includes('tomate_coupe')));
-  const letNeed=Math.max(0,saladsWanted-countAll(it=>it.k==='assiette'&&it.c.includes('laitue_coupe')));
-  if(tomOut<Math.min(tomNeed,potRoom||saladsWanted?tomNeed:0))return {t:nearest(p,all(t=>t.type==='crate'&&t.ing==='tomate'))};
-  if(countAll(it=>it.k==='laitue')<letNeed)return {t:nearest(p,all(t=>t.type==='crate'&&t.ing==='laitue'))};
+  const ch=U(t=>t.type==='board'&&t.item&&t.item.st==='cru');if(ch.length)return {t:nearest(p,ch),hold:true};
+  const cut=U(t=>t.type==='board'&&t.item&&t.item.st==='coupe');if(cut.length)return {t:nearest(p,cut)};
+  for(const ing of ['oignon','tomate']){const pot=potFor(ing);if(!pot||!can(pot)||soupNeed(ing)<=0)continue;
+   const loose=U(t=>surf(t)&&t.item&&t.item.k===ing&&t.item.st==='coupe');if(loose.length)return {t:nearest(p,loose)};}
+  if(U(t=>t.type==='board'&&!t.item).length){const raw=U(t=>surf(t)&&t.item&&t.item.st==='cru');if(raw.length)return {t:nearest(p,raw)};}
+  const out=ing=>countAll(it=>it.k===ing);
+  const room=ing=>!!potFor(ing);
+  const need={tomate:(room('tomate')?soupNeed('tomate'):0)+saladNeed('tomate'),oignon:room('oignon')?soupNeed('oignon'):0,laitue:saladNeed('laitue')};
+  for(const ing of ['oignon','tomate','laitue']){if(out(ing)<need[ing]){const c=nearest(p,U(t=>t.type==='crate'&&t.ing===ing));if(c)return {t:c};}}
   return null;};
  const order=role===0?[prepTasks,serveTasks]:[serveTasks,prepTasks];
  for(const f of order){const r=f();if(r&&r.t)return r;}
@@ -459,22 +593,25 @@ function tomato3(P,y,s){s=s||1;ell(P,.15*s,.13*s,.15*s,0,y+.13*s,0,'#e2382a',{gl
 function tomatoCut3(P,y,s){s=s||1;for(const [dx,dz,a] of [[-.08,.02,.3],[.07,.05,-.2],[0,-.07,.1]]){cyl(P,.1*s,.1*s,.035*s,dx*s,y,dz*s,'#d22f22',{rx:a*.4});cyl(P,.078*s,.078*s,.04*s,dx*s,y+.002,dz*s,'#f4836b',{rx:a*.4});}}
 function lettuce3(P,y,s){s=s||1;ell(P,.19*s,.14*s,.19*s,0,y+.13*s,0,'#3f9a3a',{gloss:.3});for(let i=0;i<5;i++){const a=i/5*Math.PI*2;ell(P,.11*s,.1*s,.11*s,Math.cos(a)*.1*s,y+.15*s,Math.sin(a)*.1*s,'#79c95a');}ell(P,.09*s,.08*s,.09*s,0,y+.24*s,0,'#b7e68c');}
 function lettuceCut3(P,y,s){s=s||1;for(let i=0;i<7;i++){const a=i*1.7;rbox(P,.14*s,.03*s,.06*s,Math.cos(a)*.09*s,y+(i%3)*.012,Math.sin(a*1.3)*.08*s,i%2?'#5fae45':'#a6dd7c',{ry:a,r:.012});}}
+function onion3(P,y,s){s=s||1;ell(P,.15*s,.14*s,.15*s,0,y+.14*s,0,'#e3a64e',{gloss:.6});for(let i=0;i<4;i++){const a=i/4*Math.PI;ell(P,.152*s,.12*s,.03*s,0,y+.14*s,0,'#c98a3a',{ry:a,a:.55});}cyl(P,.05*s,.012*s,.1*s,0,y+.25*s,0,'#b9772f');for(let i=0;i<3;i++)rbox(P,.012*s,.04*s,.012*s,(i-1)*.025*s,y-.005,0,'#6b4a2a',{r:.004});}
+function onionCut3(P,y,s){s=s||1;for(const [dx,dz,R] of [[-.07,.03,.08],[.07,.05,.07],[0,-.07,.075]]){torus(P,R*s,.018*s,dx*s,y+.02,dz*s,'#f6ecd2',{seg:16});torus(P,R*.55*s,.016*s,dx*s,y+.02,dz*s,'#ead7a8',{seg:14});}}
 function plate3(P,y,dirty){cyl(P,.25,.21,.035,0,y,0,dirty?'#d8ccb8':'#f7f5f0',{seg:24,gloss:.5});torus(P,.215,.018,0,y+.035,0,dirty?'#cfc2ab':'#ffffff',{seg:24});if(dirty){cyl(P,.08,.08,.04,.05,y+.005,-.04,'#9a6a3a');cyl(P,.05,.05,.04,-.07,y+.005,.06,'#c0502e');}}
-function plateFull3(P,y,c){plate3(P,y);const top=y+.04;
- if(c.includes('soupe')){cyl(P,.16,.13,.07,0,top,0,'#ffffff',{gloss:.4});cyl(P,.135,.135,.072,0,top+.002,0,'#e5652e');for(let i=0;i<3;i++)rbox(P,.04,.03,.04,Math.cos(i*2.1)*.06,top+.06,Math.sin(i*2.1)*.06,'#f2c46a',{r:.01});ell(P,.025,.01,.04,.05,top+.08,-.03,'#3c9a3a');}
+function plateFull3(P,y,c){plate3(P,y);const top=y+.04,sp=c.find(x=>SOUPS.has(x));
+ if(sp){const on=sp==='soupe_oignon';cyl(P,.16,.13,.07,0,top,0,'#ffffff',{gloss:.4});cyl(P,.135,.135,.072,0,top+.002,0,on?'#c4893a':'#e5652e',{gloss:.3});for(let i=0;i<3;i++)rbox(P,.045,.03,.045,Math.cos(i*2.1)*.06,top+.06,Math.sin(i*2.1)*.06,on?'#f6d58a':'#f2c46a',{r:.01});if(on)ell(P,.06,.012,.05,-.02,top+.075,.02,'#fff1c4');else ell(P,.025,.01,.04,.05,top+.08,-.03,'#3c9a3a');}
  else{if(c.includes('laitue_coupe'))lettuceCut3(Mx2(P,0,0,0,1),top,.95);if(c.includes('tomate_coupe'))tomatoCut3(Mx2(P,0,0,0,1),top+(c.includes('laitue_coupe')?.04:0),.8);}
 }
 const Mx2=(P,x,y,z,ry)=>M4.mul(P,Mx(x,y,z,ry));
 function dirtyStack3(P,y,n){for(let i=0;i<Math.min(n,6);i++)plate3(Mx2(P,(i%2)*.02,0,0,i),y+i*.045,true);}
 function ext3(P,y){cyl(P,.09,.09,.42,0,y,0,'#d8302a',{gloss:.7});ell(P,.09,.05,.09,0,y+.42,0,'#d8302a',{gloss:.7});cyl(P,.03,.03,.08,0,y+.45,0,'#222');rbox(P,.16,.03,.04,.06,y+.5,0,'#222',{r:.01});cyl(P,.02,.02,.2,-.1,y+.35,0,'#333',{rz:.6});rbox(P,.12,.06,.002,0,y+.18,.09,'#ffffff',{r:.005});}
 function item3(it,P,y){if(!it)return;const k=key(it);
- if(k==='tomate_cru')tomato3(P,y);else if(k==='tomate_coupe')tomatoCut3(P,y+.02);else if(k==='laitue_cru')lettuce3(P,y);else if(k==='laitue_coupe')lettuceCut3(P,y);
+ if(k==='tomate_cru')tomato3(P,y);else if(k==='tomate_coupe')tomatoCut3(P,y+.02);else if(k==='laitue_cru')lettuce3(P,y);else if(k==='oignon_cru')onion3(P,y);else if(k==='oignon_coupe')onionCut3(P,y);else if(k==='laitue_coupe')lettuceCut3(P,y);
  else if(it.k==='assiette')plateFull3(P,y,it.c);else if(it.k==='sales')dirtyStack3(P,y,it.n);else if(it.k==='extincteur')ext3(P,y);}
 
 // ---------- personnages ----------
 function chef3(p,time){
  const S=SKINS[p.skin]||SKINS[0],ang=Math.atan2(p.dir.x,p.dir.z),ph=Math.sin(p.walk),bob=Math.abs(ph)*.05+(p.moving?0:Math.sin(time*3+p.i)*.012),lean=p.dash>0?.25:(p.moving?.08:0);
- const P=M4.mul(M4.trs(p.x,0,p.z,ang,1.22),Mx(0,0,0,0,lean));
+ let sink=0;if(p.dead>0){const k=DEADT-p.dead;if(k>.8)return;sink=k*1.4;}
+ const P=M4.mul(M4.trs(p.x,-sink,p.z,ang,1.22),Mx(0,0,0,0,lean));
  for(const sd of [-1,1]){const sw=p.moving?Math.sin(p.walk+(sd>0?Math.PI:0))*.1:0;ell(P,.09,.065,.13,sd*.13,.06+Math.max(0,sw)*.4,sw,'#3a2a22',{gloss:.2});}
  const B=M4.mul(P,Mx(0,bob,0));
  ell(B,.31,.36,.29,0,.5,0,S.body,{gloss:.25,seg:20});
@@ -513,15 +650,15 @@ function drawKitchen(time){
  for(let i=0;i<3;i++){const x=W-2.6+i*.55;cyl(ID,.015,.015,.4,x,1.7,.08,'#555');cyl(ID,.17,.17,.07,x,1.6,.12,'#b8bec6',{rx:1.3,gloss:.8});}
  rbox(ID,1.5,1.0,.05,W/2,1.35,.02,'#cfeaf7',{r:.03,e:'#283848'});rbox(ID,1.6,.08,.08,W/2,1.31,.06,th.trim,{r:.02});rbox(ID,.05,1.0,.06,W/2,1.35,.05,th.trim,{r:.01});
  for(const x of [W*.3,W*.7]){cyl(ID,.01,.01,.6,x,2.6,.6,'#333',{noShadow:true});cyl(ID,.22,.08,.18,x,2.42,.6,th.trim,{noShadow:true,e:'#3a2a10'});ell(ID,.08,.06,.08,x,2.4,.6,'#fff7d0',{e:'#ffe9a0',noShadow:true});}
- for(const row of G.tiles)for(const t of row){if(t.type==='floor')continue;const P=Mx(t.x+.5,0,t.z+.5);drawTile(t,P,time,th);}
+ for(const row of G.tiles)for(const t of row){const P=Mx(t.x+.5,0,t.z+.5);if(t.type==='floor'){if(t.g)drawGround(t,P,time);continue;}drawTile(t,P,time,th);}
 }
 function drawTile(t,P,time,th){
  const top=CH;
  switch(t.type){
   case 'counter':counterBody(t,P,th.body,th.top);if(t.ch==='E'&&!t.item){rbox(P,.3,.02,.3,0,top,0,'#c0392b',{r:.01,a:.5});}item3(t.item,P,top);break;
   case 'crate':{counterBody(t,P,'#9a6236','#b9834f');const c='#c58a52';rbox(P,.8,.3,.06,0,top,.37,c,{r:.02});rbox(P,.8,.3,.06,0,top,-.37,c,{r:.02});rbox(P,.06,.3,.8,.37,top,0,c,{r:.02});rbox(P,.06,.3,.8,-.37,top,0,c,{r:.02});
-   for(const [dx,dz] of [[-.17,-.15],[.16,-.12],[-.12,.15],[.17,.16],[0,0]]){const Q=Mx2(P,dx,0,dz,dx*7);if(t.ing==='tomate')tomato3(Q,top+.06,.9);else lettuce3(Q,top+.04,.75);}
-   rbox(P,.36,.2,.02,0,top-.42,.5,'#fff3d6',{r:.02});if(t.ing==='tomate')ell(P,.07,.06,.02,0,top-.32,.515,'#e2382a');else ell(P,.08,.06,.02,0,top-.32,.515,'#58b13f');break;}
+   for(const [dx,dz] of [[-.17,-.15],[.16,-.12],[-.12,.15],[.17,.16],[0,0]]){const Q=Mx2(P,dx,0,dz,dx*7);if(t.ing==='tomate')tomato3(Q,top+.06,.9);else if(t.ing==='oignon')onion3(Q,top+.05,.85);else lettuce3(Q,top+.04,.75);}
+   rbox(P,.36,.2,.02,0,top-.42,.5,'#fff3d6',{r:.02});if(t.ing==='tomate')ell(P,.07,.06,.02,0,top-.32,.515,'#e2382a');else if(t.ing==='oignon')ell(P,.07,.065,.02,0,top-.32,.515,'#e3a64e');else ell(P,.08,.06,.02,0,top-.32,.515,'#58b13f');break;}
   case 'board':{counterBody(t,P,th.body,th.top);rbox(P,.66,.05,.46,0,top,0,'#dba36a',{r:.03,gloss:.2});
    const chopping=G.players.some(p=>p.chopping&&p.workTile===t),k=chopping?Math.abs(Math.sin(time*16))*.12:0;
    rbox(P,.05,.02,.32,.27,top+.06+k,.0,'#dfe5ec',{gloss:1,r:.008,ry:.2,rx:chopping?-.4:0});rbox(P,.05,.04,.12,.3,top+.06+k,.21,'#3b2a20',{r:.01,ry:.2});
@@ -530,9 +667,9 @@ function drawTile(t,P,time,th){
    const pot=t.pot,cooking=pot.c.length&&!pot.done&&!pot.burnt;if(cooking||pot.done)for(let i=0;i<10;i++){const a=i/10*Math.PI*2+time;ell(P,.03,.045,.03,Math.cos(a)*.24,top+.04,Math.sin(a)*.24,'#3d8bff',{e:'#3d8bff',a:.8,noShadow:true});}
    cyl(P,.29,.26,.26,0,top+.02,0,'#b9c1cb',{gloss:.9,seg:24,open:true,ds:true});cyl(P,.26,.26,.01,0,top+.03,0,'#2b2f35');torus(P,.285,.03,0,top+.28,0,'#dfe4ea',{seg:24});cyl(P,.25,.25,.005,0,top+.06,0,'#2b2f35');rbox(P,.12,.04,.06,.33,top+.2,0,'#2a2d33',{r:.015});rbox(P,.12,.04,.06,-.33,top+.2,0,'#2a2d33',{r:.015});
    if(!pot.c.length&&!pot.burnt)cyl(P,.25,.25,.01,0,top+.1,0,'#3a3f46');
-   if(pot.c.length||pot.burnt){const lvl=top+.1+Math.min(3,pot.c.length||3)*.05,col=pot.burnt?'#2a201c':pot.done?'#e5652e':'#d8503a';cyl(P,.25,.25,.02,0,lvl,0,col,{gloss:.5});
-    if(!pot.done&&!pot.burnt)for(let i=0;i<pot.c.length;i++)tomatoCut3(Mx2(P,Math.cos(i*2.1)*.1,0,Math.sin(i*2.1)*.1,i),lvl+.02,.6);
-    if(pot.done||cooking)for(let i=0;i<3;i++){const ph=(time*1.3+i/3)%1;ell(P,.03+ph*.03,.03+ph*.03,.03+ph*.03,Math.cos(i*2)*.1,lvl+.03,Math.sin(i*2)*.1,'#ffb59a',{a:1-ph,noShadow:true});}}
+   if(pot.c.length||pot.burnt){const on=pot.c[0]==='oignon',lvl=top+.1+Math.min(3,pot.c.length||3)*.05,col=pot.burnt?'#2a201c':pot.done?(on?'#c4893a':'#e5652e'):(on?'#e2c27a':'#d8503a');cyl(P,.25,.25,.02,0,lvl,0,col,{gloss:.5});
+    if(!pot.done&&!pot.burnt)for(let i=0;i<pot.c.length;i++)(on?onionCut3:tomatoCut3)(Mx2(P,Math.cos(i*2.1)*.1,0,Math.sin(i*2.1)*.1,i),lvl+.02,.6);
+    if(pot.done||cooking)for(let i=0;i<3;i++){const ph=(time*1.3+i/3)%1;ell(P,.03+ph*.03,.03+ph*.03,.03+ph*.03,Math.cos(i*2)*.1,lvl+.03,Math.sin(i*2)*.1,on?'#f6e0a8':'#ffb59a',{a:1-ph,noShadow:true});}}
    if(t.fire>0)fire3(P,top+.2,time,t.fire);break;}
   case 'sink':{counterBody(t,P,th.body,'#c9d3dc',true);const st='#c9d3dc';rbox(P,1.0,.08,.16,0,top-.08,.42,st,{r:.03,gloss:.8});rbox(P,1.0,.08,.16,0,top-.08,-.42,st,{r:.03,gloss:.8});rbox(P,.16,.08,1.0,.42,top-.08,0,st,{r:.03,gloss:.8});rbox(P,.16,.08,1.0,-.42,top-.08,0,st,{r:.03,gloss:.8});
    rbox(P,.7,.02,.7,0,top-.075,0,'#2b4d63',{r:.02});
@@ -547,8 +684,34 @@ function drawTile(t,P,time,th){
    for(let i=0;i<5;i++){const z=((time*.6+i/5)%1)*.8-.4;rbox(P,.74,.02,.08,0,top+.02,z,'#3b3b46',{r:.01});}
    ell(P,.11,.08,.11,.3,top+.03,-.34,'#f2c14e',{gloss:1});cyl(P,.02,.02,.04,.3,top+.11,-.34,'#f2c14e');
    rbox(P,.06,.5,.06,-.45,top,-.45,'#f2c14e',{r:.02});rbox(P,.06,.5,.06,-.45,top,.45,'#f2c14e',{r:.02});rbox(P,.06,.06,.96,-.45,top+.5,0,'#f2c14e',{r:.02});break;}
+  case 'belt':{counterBody(t,P,'#596273','#596273',true);const [dx,dz]=t.bd,Q=M4.mul(P,Mx(0,0,0,Math.atan2(dx,dz)));
+   rbox(Q,1.0,.06,1.0,0,top-.09,0,'#7c8594',{r:.02,gloss:.6});rbox(Q,.78,.03,1.0,0,top-.04,0,'#2a2d34',{r:.01});
+   for(let i=0;i<5;i++){const s=((time/BELTT+i/5)%1)-.5;rbox(Q,.76,.014,.05,0,top-.012,s,'#565c68',{r:.004,noShadow:true});}
+   rbox(Q,.1,.1,1.0,-.45,top-.07,0,'#c9ced6',{r:.03,gloss:.9});rbox(Q,.1,.1,1.0,.45,top-.07,0,'#c9ced6',{r:.03,gloss:.9});
+   rbox(Q,.05,.012,.2,-.06,top+.02,.3,'#ffd34d',{ry:.8,r:.005,e:'#5a4400',noShadow:true});rbox(Q,.05,.012,.2,.06,top+.02,.3,'#ffd34d',{ry:-.8,r:.005,e:'#5a4400',noShadow:true});
+   if(t.item){const off=t.bp-.5;item3(t.item,M4.mul(P,Mx(dx*off,0,dz*off)),top);}break;}
   case 'trash':{counterBody(t,P,th.body,th.top);cyl(P,.24,.2,.3,0,top,0,'#5e6672',{gloss:.4});cyl(P,.26,.26,.04,0,top+.3,0,'#4a515c',{gloss:.4});rbox(P,.16,.04,.04,0,top+.34,0,'#2a2d33',{r:.01});break;}
  }
+}
+function drawGround(t,P,time){
+ const g=t.g;
+ if(g==='ice'){rbox(P,.99,.02,.99,0,0,0,(t.x+t.z)%2?'#a9dcf3':'#9cd3ee',{r:.012,gloss:1,a:.92});rbox(P,.5,.004,.03,(t.seed-.5)*.5,.021,(t.seed*3%1-.5)*.6,'#f4fbff',{r:.002,ry:t.seed*9,a:.85,noShadow:true});if(t.seed<.4)rbox(P,.3,.004,.02,(t.seed*7%1-.5)*.6,.021,(t.seed*5%1-.5)*.6,'#ffffff',{r:.002,ry:t.seed*13,a:.7,noShadow:true});return;}
+ if(g==='water'||isBridge(t)){water3(t,P,time,!isBridge(t));if(isBridge(t))bridge3(t,P,time);return;}
+ if(g==='conv'){const [dx,dz]=t.push,Q=M4.mul(P,Mx(0,0,0,Math.atan2(dx,dz)));
+  rbox(Q,.98,.03,.98,0,0,0,'#3b404c',{r:.01});rbox(Q,.07,.04,.98,-.46,0,0,'#f2c14e',{r:.012});rbox(Q,.07,.04,.98,.46,0,0,'#f2c14e',{r:.012});
+  for(let i=0;i<2;i++){const s=((time*CONVV+i*.5)%1)-.5;rbox(Q,.05,.012,.32,-.1,.03,s,'#ffd34d',{ry:.8,e:'#4a3800',r:.005,noShadow:true});rbox(Q,.05,.012,.32,.1,.03,s,'#ffd34d',{ry:-.8,e:'#4a3800',r:.005,noShadow:true});}}
+}
+function water3(t,P,time,curbs){
+ rbox(P,1.0,.014,1.0,0,0,0,'#2f86c4',{r:0,gloss:1,e:'#08243e',noShadow:true});
+ for(let i=0;i<2;i++){const ph=(time*.35+t.seed+i*.5)%1;ell(P,.16+ph*.1,.004,.05+ph*.03,(t.seed-.5)*.5,.018,ph-.5,'#c9ecff',{a:(1-ph)*.55,noShadow:true});}
+ if(curbs)for(const [dx,dz] of NB){const n=T(t.x+dx,t.z+dz);if(n&&n.type==='floor'&&n.g!=='water'&&!isBridge(n))rbox(P,dx?.09:1.0,.09,dz?.09:1.0,dx*.455,0,dz*.455,'#a3abb5',{r:.025});}
+}
+function bridge3(t,P,time){
+ const f=bridgeF(t.g),left=bridgeLeft(t.g),warn=left>0&&left<2.4&&Math.sin(time*14)>0;if(f<=0)return;
+ const n1=T(t.x-1,t.z),n2=T(t.x+1,t.z),alongX=!!(n1&&n1.type==='floor'&&n1.g!=='water'||n2&&n2.type==='floor'&&n2.g!=='water');
+ const Q=alongX?P:M4.mul(P,Mx(0,0,0,Math.PI/2)),y=-(1-f)*.32,col=warn?'#e8783a':'#b07a45';
+ for(let i=0;i<4;i++)rbox(Q,.21,.07,.94,-.375+i*.25,y,0,shade3(col,(i%2)*.08-.04),{r:.02});
+ for(const sd of [-1,1])rbox(Q,1.0,.05,.06,0,y+.07,sd*.44,'#7a5230',{r:.015});
 }
 function fire3(P,y,time,f){for(let i=0;i<7;i++){const a=i*.9+time*2,r=.1+.06*Math.sin(time*9+i),h=(.18+.14*Math.abs(Math.sin(time*7+i*2)))*(.6+f*.5);
  ell(P,r,h,r,Math.cos(a)*.13,y+h*.8,Math.sin(a)*.13,i%2?'#ff7a1a':'#ffd23a',{e:i%2?'#ff5a00':'#ffb000',a:.85,noShadow:true});}}
@@ -577,9 +740,12 @@ function icon(c,k,x,y,s){
  else if(k==='tomate_coupe'){for(const [dx,dy] of [[-.3,.1],[.3,.12],[0,-.18]]){c.fillStyle='#c92e22';c.beginPath();c.arc(dx*s,dy*s,s*.38,0,7);c.fill();c.fillStyle='#f4836b';c.beginPath();c.arc(dx*s,dy*s,s*.29,0,7);c.fill();}}
  else if(k==='laitue'||k==='laitue_cru'){ball(0,0,s*.66,'#3f9a3a');ball(-s*.15,-s*.05,s*.45,'#79c95a');ball(s*.1,s*.05,s*.28,'#b7e68c');}
  else if(k==='laitue_coupe'){for(let i=0;i<7;i++){c.save();c.translate(Math.cos(i*1.7)*s*.3,Math.sin(i*2.3)*s*.24);c.rotate(i*.9);c.fillStyle=i%2?'#5fae45':'#a6dd7c';rrp(c,-s*.3,-s*.08,s*.6,s*.16,s*.08);c.fill();c.restore();}}
+ else if(k==='oignon'||k==='oignon_cru'){ball(0,s*.08,s*.6,'#e3a64e');c.fillStyle='#b9772f';c.beginPath();c.moveTo(-s*.14,-s*.4);c.lineTo(0,-s*.85);c.lineTo(s*.14,-s*.4);c.fill();c.strokeStyle='rgba(150,90,30,.55)';c.lineWidth=Math.max(1,s*.08);for(const a of [-.35,.35]){c.beginPath();c.ellipse(0,s*.08,s*.6*Math.abs(Math.cos(a*2)),s*.58,0,-1.2,1.2);c.stroke();}}
+ else if(k==='oignon_coupe'){for(const [dx,dy] of [[-.3,.1],[.3,.12],[0,-.18]]){c.strokeStyle='#e9d6a8';c.lineWidth=s*.1;c.beginPath();c.arc(dx*s,dy*s,s*.32,0,7);c.stroke();c.strokeStyle='#f8f0dc';c.beginPath();c.arc(dx*s,dy*s,s*.17,0,7);c.stroke();}}
+ else if(k==='soupe_oignon'){c.fillStyle='#ffffff';c.beginPath();c.ellipse(0,s*.1,s*.8,s*.55,0,0,7);c.fill();c.fillStyle='#c4893a';c.beginPath();c.ellipse(0,0,s*.62,s*.36,0,0,7);c.fill();c.fillStyle='#fff1c4';c.beginPath();c.ellipse(-s*.05,-s*.02,s*.36,s*.18,0,0,7);c.fill();c.fillStyle='#f6d58a';for(let i=0;i<3;i++)c.fillRect(-s*.3+i*s*.22,-s*.1+(i%2)*s*.1,s*.13,s*.13);}
  else if(k==='soupe'){c.fillStyle='#ffffff';c.beginPath();c.ellipse(0,s*.1,s*.8,s*.55,0,0,7);c.fill();c.fillStyle='#e5652e';c.beginPath();c.ellipse(0,0,s*.62,s*.36,0,0,7);c.fill();c.fillStyle='#f2c46a';for(let i=0;i<3;i++)c.fillRect(-s*.3+i*s*.22,-s*.08+(i%2)*s*.1,s*.14,s*.14);}
  else if(k==='salade'){c.fillStyle='#ffffff';c.beginPath();c.ellipse(0,s*.1,s*.85,s*.55,0,0,7);c.fill();icon(c,'laitue_coupe',-s*.2,0,s*.7);icon(c,'tomate_coupe',s*.25,0,s*.55);}
- else if(k==='pot'){c.fillStyle='#8d96a1';rrp(c,-s*.6,-s*.35,s*1.2,s*.8,s*.18);c.fill();c.fillStyle='#e5652e';c.beginPath();c.ellipse(0,-s*.33,s*.55,s*.14,0,0,7);c.fill();c.fillStyle='#4a515c';c.fillRect(-s*.85,-s*.15,s*.25,s*.12);c.fillRect(s*.6,-s*.15,s*.25,s*.12);}
+ else if(k==='pot'||k==='pot_oignon'){c.fillStyle='#8d96a1';rrp(c,-s*.6,-s*.35,s*1.2,s*.8,s*.18);c.fill();c.fillStyle=k==='pot'?'#e5652e':'#c4893a';c.beginPath();c.ellipse(0,-s*.33,s*.55,s*.14,0,0,7);c.fill();c.fillStyle='#4a515c';c.fillRect(-s*.85,-s*.15,s*.25,s*.12);c.fillRect(s*.6,-s*.15,s*.25,s*.12);}
  else if(k==='knife'){c.rotate(-.7);c.fillStyle='#dfe5ec';rrp(c,-s*.12,-s*.7,s*.24,s*.85,s*.08);c.fill();c.fillStyle='#3b2a20';rrp(c,-s*.12,s*.15,s*.24,s*.5,s*.08);c.fill();}
  c.restore();
 }
@@ -597,12 +763,14 @@ function drawHUD(time){
   if(t.type==='board'&&t.item&&t.item.st==='cru'&&t.item.cp>0)bar2(c,q.x-24,q.y,48,t.item.cp,'#7ed37f');
   if(t.type==='sink'&&t.wp>0)bar2(c,q.x-24,q.y,48,t.wp,'#7fd0ff');
   if(t.type==='stove'){const pot=t.pot;if(t.fire>0){c.font='700 '+(26*sc+6)+'px "Baloo 2",sans-serif';c.textAlign='center';c.fillStyle=Math.sin(time*10)>0?'#ff4a2a':'#ffd23a';c.fillText('🔥',q.x,q.y-6);bar2(c,q.x-24,q.y+6,48,t.fire,'#ff5a3a');}
-   else if(pot.c.length||pot.burnt){const keys=pot.burnt?[]:pot.done?['soupe']:pot.c.map(()=> 'tomate');if(keys.length)bubble(c,q.x,q.y-26,keys);
+   else if(pot.c.length||pot.burnt){const keys=pot.burnt?[]:pot.done?[SOUPING[pot.c[0]]]:pot.c.slice();if(keys.length)bubble(c,q.x,q.y-26,keys);
     if(!pot.done&&!pot.burnt)bar2(c,q.x-24,q.y-2,48,pot.prog,'#7ed37f');
     if(pot.done){bar2(c,q.x-24,q.y-2,48,pot.burn,pot.burn>.55&&Math.sin(time*16)>0?'#ff4a2a':'#ffb347');if(pot.burn>.55){c.fillStyle='#ff4a2a';c.beginPath();c.arc(q.x+34,q.y-26,13,0,7);c.fill();c.fillStyle='#fff';c.font='800 18px sans-serif';c.textAlign='center';c.fillText('!',q.x+34,q.y-20);}}}}
   if(t.item&&t.item.k==='assiette'&&t.item.c.length){const q2=P(t.x+.5,CH+.55,t.z+.5);bubble(c,q2.x,q2.y-14,plateIcons(t.item));}
  }
  for(const p of G.players){
+  if(p.dead>0){const s=G.spawns[p.i],q2=P(s.x,.9,s.z);c.globalAlpha=.9;c.beginPath();c.arc(q2.x,q2.y,22,0,7);c.fillStyle='rgba(30,22,44,.85)';c.fill();c.lineWidth=4;c.strokeStyle=PCOL[p.i];c.beginPath();c.arc(q2.x,q2.y,22,-Math.PI/2,-Math.PI/2+Math.PI*2*(1-p.dead/DEADT));c.stroke();
+   c.fillStyle='#fff';c.font='800 22px "Baloo 2",sans-serif';c.textAlign='center';c.fillText(Math.ceil(p.dead),q2.x,q2.y+8);c.globalAlpha=1;continue;}
   const q=P(p.x,1.55,p.z);
   if(p.held&&p.held.k==='assiette'&&p.held.c.length)bubble(c,q.x+40,q.y+18,plateIcons(p.held));
   c.fillStyle=PCOL[p.i];c.beginPath();c.moveTo(q.x,q.y+4);c.lineTo(q.x-9,q.y-9);c.lineTo(q.x+9,q.y-9);c.closePath();c.fill();c.strokeStyle='#fff';c.lineWidth=2;c.stroke();
@@ -619,18 +787,27 @@ function drawHUD(time){
  const cg=c.createRadialGradient(42,by+22,3,46,by+28,22);cg.addColorStop(0,'#fff6b0');cg.addColorStop(.4,'#ffcf3a');cg.addColorStop(1,'#c98a10');c.fillStyle=cg;c.beginPath();c.arc(46,by+28,20,0,7);c.fill();c.fillStyle='#8a5a00';c.font='800 18px "Baloo 2",sans-serif';c.textAlign='center';c.fillText('★',46,by+34);
  c.fillStyle='#fff';c.font='800 30px "Baloo 2",sans-serif';c.textAlign='left';c.fillText(G.score,76,by+39);
  if(G.streak>1){c.fillStyle='#ffd34d';c.font='800 16px "Baloo 2",sans-serif';c.fillText('×'+G.streak,150,by+38);}
+ starBar(c,W/2,H-70,G.L.stars,G.served,time);
  const tm=Math.ceil(G.time),txt=Math.floor(tm/60)+':'+String(tm%60).padStart(2,'0');const tx=W-110,ty=H-70;
  rrp(c,tx,ty,96,56,28);c.fillStyle='rgba(30,22,44,.85)';c.fill();c.fillStyle=G.time<30&&Math.sin(time*8)>0?'#ff6a5a':'#ffffff';c.font='800 30px "Baloo 2",sans-serif';c.textAlign='center';c.fillText(txt,tx+48,ty+39);
  const f=G.time/G.L.dur;c.strokeStyle='#ffd34d';c.lineWidth=4;c.beginPath();c.arc(tx-26,ty+28,18,-Math.PI/2,-Math.PI/2+Math.PI*2*f);c.stroke();c.strokeStyle='rgba(255,255,255,.2)';c.beginPath();c.arc(tx-26,ty+28,18,0,7);c.stroke();
 }
-function plateIcons(it){return it.c.map(k=>k==='soupe'?'soupe':k);}
+function star5(c,x,y,r,fill,stroke){c.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*.45:r;c.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr);}c.closePath();c.fillStyle=fill;c.fill();if(stroke){c.lineWidth=2.5;c.strokeStyle=stroke;c.stroke();}}
+function starBar(c,cx,y,th,served,time){
+ const w=300,x=cx-w/2,max=th[3]*1.12;rrp(c,x,y,w,56,28);c.fillStyle='rgba(30,22,44,.85)';c.fill();
+ icon(c,'soupe',x+30,y+28,13);c.fillStyle='#fff';c.font='800 26px "Baloo 2",sans-serif';c.textAlign='center';c.fillText(served,x+62,y+37);
+ const bx=x+86,bw=w-104,by=y+33;rrp(c,bx,by-5,bw,10,5);c.fillStyle='#463a5a';c.fill();rrp(c,bx,by-5,Math.max(8,bw*Math.min(1,served/max)),10,5);c.fillStyle='#ffd34d';c.fill();
+ th.forEach((v,i)=>{const sx=bx+bw*v/max,on=served>=v;star5(c,sx,by-12,on?11+Math.max(0,Math.sin(time*5+i))*1.5:9,on?'#ffd34d':'#6b5d80',on?'#8a5a00':null);});
+}
+function plateIcons(it){return it.c.slice();}
+const dishIcon=r=>r==='soupe'?'soupe':r==='oignon'?'soupe_oignon':'salade';
 function ticket(c,o,x,y,time){
  const R=RECIPES[o.r],w=164,h=122,f=Math.max(0,o.t/o.max),slide=Math.max(0,1-o.age*3),shake=o.t<12?Math.sin(time*30)*2:0;
  c.save();c.translate(x+shake,y-slide*60);c.globalAlpha=1-slide;
  rrp(c,2,4,w,h,14);c.fillStyle='rgba(0,0,0,.25)';c.fill();rrp(c,0,0,w,h,14);c.fillStyle='#fffaf0';c.fill();
  const col=f>.5?'#5cc85a':f>.25?'#f2a23a':'#e8463a';rrp(c,6,6,(w-12)*f,10,5);c.fillStyle=col;c.fill();rrp(c,6,6,w-12,10,5);c.strokeStyle='rgba(0,0,0,.12)';c.lineWidth=1;c.stroke();
- icon(c,o.r==='soupe'?'soupe':'salade',w/2,52,30);
- const pp=R.pipe;const step=Math.min(36,(w-16)/pp.length);pp.forEach((k,i)=>{const ix=w/2-(pp.length-1)*step/2+i*step;rrp(c,ix-16,86,32,30,8);c.fillStyle='#efe6d6';c.fill();icon(c,k==='pot'?'pot':k==='knife'?'knife':k,ix,101,10);});
+ icon(c,dishIcon(o.r),w/2,52,30);
+ const pp=R.pipe;const step=Math.min(36,(w-16)/pp.length);pp.forEach((k,i)=>{const ix=w/2-(pp.length-1)*step/2+i*step;rrp(c,ix-16,86,32,30,8);c.fillStyle='#efe6d6';c.fill();icon(c,k==='pot'?(o.r==='oignon'?'pot_oignon':'pot'):k,ix,101,10);});
  c.restore();
 }
 function chefPortrait(cv,si,pi){const c=cv.getContext('2d'),S=SKINS[si],w=cv.width,h=cv.height;c.clearRect(0,0,w,h);
@@ -646,8 +823,8 @@ function chefPortrait(cv,si,pi){const c=cv.getContext('2d'),S=SKINS[si],w=cv.wid
 
 // ================= ENTRÉES, SON, RÉSEAU, ÉCRANS =================
 let state='title',levelIdx=0,ANIM=0;
-function load(k,d){try{const v=localStorage.getItem('cuisineOC.'+k);return v?JSON.parse(v):d;}catch(e){return d;}}
-function save(k,v){try{localStorage.setItem('cuisineOC.'+k,JSON.stringify(v));}catch(e){}}
+function load(k,d){try{const v=localStorage.getItem('chaudDevant.'+k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function save(k,v){try{localStorage.setItem('chaudDevant.'+k,JSON.stringify(v));}catch(e){}}
 let BEST=load('best',{}),mySkin=load('skin',null),choice=[0,2];
 
 // ---------- son ----------
@@ -659,7 +836,8 @@ const SFX0={pick:()=>tone(660,.07,'triangle',.1),drop:()=>tone(420,.08,'triangle
  plop:()=>tone(300,.12,'sine',.14,0,.5),ding:()=>{tone(1320,.25,'sine',.1);tone(1760,.35,'sine',.06,.08);},warn:()=>tone(1000,.06,'square',.04),fire:()=>{noise(.6,.3,600);tone(140,.5,'sawtooth',.05,0,.6);},
  spray:()=>noise(.22,.18,3500),scrub:()=>noise(.18,.12,1200),splash:()=>noise(.3,.2,900),clink:()=>{tone(1500,.06,'triangle',.06);tone(1900,.06,'triangle',.05,.05);},
  serve:()=>{tone(1047,.12,'triangle',.1);tone(1319,.12,'triangle',.1,.08);tone(1568,.3,'triangle',.1,.16);},fail:()=>tone(160,.35,'sawtooth',.06,0,.6),order:()=>{tone(784,.1,'triangle',.07);tone(988,.14,'triangle',.07,.08);},
- dash:()=>noise(.12,.12,700),end:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.4,'triangle',.09,i*.12))};
+ dash:()=>noise(.12,.12,700),star:()=>[1319,1568,2093].forEach((f,i)=>tone(f,.22,'sine',.09,i*.07)),pop:()=>{tone(500,.1,'sine',.1,0,2.2);},
+ bridgeUp:()=>{noise(.35,.12,400);tone(220,.3,'triangle',.05,0,1.6);},bridgeDown:()=>{noise(.35,.12,400);tone(330,.3,'triangle',.05,0,.5);},end:()=>[523,659,784,1047].forEach((f,i)=>tone(f,.4,'triangle',.09,i*.12))};
 
 // ---------- entrées : flèches (ou ZQSD), Espace/Entrée, Maj pour le sprint ----------
 const MOVE={up:['ArrowUp','KeyW'],down:['ArrowDown','KeyS'],left:['ArrowLeft','KeyA'],right:['ArrowRight','KeyD']};
@@ -721,33 +899,37 @@ function netMsg(m){
  updBar();
 }
 function snapshot(){
- const tl=[];let i=0;for(const row of G.tiles)for(const t of row){if(t.type!=='floor'){const pot=t.pot?[t.pot.c.length,R2(t.pot.prog),t.pot.done?1:0,R2(t.pot.burn),t.pot.burnt?1:0]:0;
-  tl.push([i,t.item,t.cnt===undefined?null:t.cnt,t.dirty||0,R2(t.wp||0),R2(t.fire||0),pot]);}i++;}
+ const tl=[];let i=0;for(const row of G.tiles)for(const t of row){if(t.type!=='floor'){const pot=t.pot?[t.pot.c.length,R2(t.pot.prog),t.pot.done?1:0,R2(t.pot.burn),t.pot.burnt?1:0,t.pot.c[0]||'']:0;
+  tl.push([i,t.item,t.cnt===undefined?null:t.cnt,t.dirty||0,R2(t.wp||0),R2(t.fire||0),pot,t.bp===undefined?0:R2(t.bp)]);}i++;}
  const pos=t=>t?[t.x,t.z]:null;
  const s={t:'snap',lvl:G.idx,tm:R2(G.time),el:R2(G.elapsed),sc:G.score,sv:G.served,lo:G.lost,st:G.streak,o:G.orders.map(o=>[o.r,R2(o.t),o.max,R2(o.age)]),tl,
-  p:G.players.map(p=>({x:R2(p.x),z:R2(p.z),dx:R2(p.dir.x),dz:R2(p.dir.z),h:p.held,w:R2(p.walk),m:p.moving?1:0,c:p.chopping?1:0,sp:p.spraying?1:0,d:R2(p.dash),wt:pos(p.workTile&&p.chopping?p.workTile:null),tg:pos(p.target),sk:p.skin})),ev:NET.out};
+  p:G.players.map(p=>({x:R2(p.x),z:R2(p.z),dx:R2(p.dir.x),dz:R2(p.dir.z),h:p.held,w:R2(p.walk),m:p.moving?1:0,c:p.chopping?1:0,sp:p.spraying?1:0,d:R2(p.dash),wt:pos(p.workTile&&p.chopping?p.workTile:null),tg:pos(p.target),sk:p.skin,dd:R2(p.dead)})),ev:NET.out};
  NET.out=[];return s;
 }
 function applySnap(s){
  if(!G||G.idx!==s.lvl)startLevel(s.lvl);
  G.time=s.tm;G.elapsed=s.el;G.score=s.sc;G.served=s.sv;G.lost=s.lo;G.streak=s.st;G.orders=s.o.map(([r,t,max,age])=>({r,t,max,age}));
  const flat=[];for(const row of G.tiles)for(const t of row)flat.push(t);
- for(const [i,item,cnt,dirty,wp,fire,pot] of s.tl){const t=flat[i];if(!t)continue;t.item=item;if(cnt!==null)t.cnt=cnt;t.dirty=dirty;t.wp=wp;t.fire=fire;
-  if(pot&&t.pot){const n=pot[0];t.pot.c=Array(n).fill('tomate');t.pot.prog=pot[1];t.pot.done=!!pot[2];t.pot.burn=pot[3];t.pot.burnt=!!pot[4];}}
+ for(const [i,item,cnt,dirty,wp,fire,pot,bp] of s.tl){const t=flat[i];if(!t)continue;t.item=item;if(cnt!==null)t.cnt=cnt;t.dirty=dirty;t.wp=wp;t.fire=fire;if(t.type==='belt')t.bp=bp;
+  if(pot&&t.pot){const n=pot[0];t.pot.c=Array(n).fill(pot[5]||'tomate');t.pot.prog=pot[1];t.pot.done=!!pot[2];t.pot.burn=pot[3];t.pot.burnt=!!pot[4];}}
  s.p.forEach((ps,i)=>{const p=G.players[i];p.held=ps.h;p.chopping=!!ps.c;p.spraying=!!ps.sp;p.workTile=ps.wt?T(ps.wt[0],ps.wt[1]):null;p.skin=ps.sk;
+  if(i===meI()){if(ps.dd>0){if(!(p.dead>0)){p.held=null;p.vx=p.vz=0;}p.dead=ps.dd;}else if(p.dead>0){p.dead=0;const sp=G.spawns[i];p.x=sp.x;p.z=sp.z;p.vx=p.vz=0;}}
+  else p.dead=ps.dd;
   if(i!==meI()){p.tx=ps.x;p.tz=ps.z;p.dir={x:ps.dx,z:ps.dz};p.walk=ps.w;p.moving=!!ps.m;p.dash=ps.d;p.target=ps.tg?T(ps.tg[0],ps.tg[1]):null;}});
  for(const e of s.ev)playFx(e);
 }
 function remoteInput(p,dt){
  const r=NET.remote,press=r.pr>NET.lastPr,dash=r.ds>NET.lastDs;NET.lastPr=r.pr;NET.lastDs=r.ds;
- if(press){p.x=r.x;p.z=r.z;}else{const a=Math.min(1,dt*20);p.x+=(r.x-p.x)*a;p.z+=(r.z-p.z)*a;}
+ if(p.await&&!(p.dead>0)){const s=G.spawns[p.i];if(Math.hypot(r.x-s.x,r.z-s.z)<1.2)p.await=false;}
+ if(p.dead>0||p.await){}else if(press){p.x=r.x;p.z=r.z;}else{const a=Math.min(1,dt*20);p.x+=(r.x-p.x)*a;p.z+=(r.z-p.z)*a;}
  p.dir={x:r.dx,z:r.dz};p.walk=r.w;if(dash){p.dash=.17;emitLocal({s:'dash'});}else p.dash=Math.max(0,(p.dash||0)-dt);
  return {remote:true,mv:!!r.mv,act:press,actH:!!r.h,tg:r.tg};
 }
 function guestStep(dt){
  const me=G.players[1],o=G.players[0],inp=readInput();
  if(o.tx!==undefined){const a=Math.min(1,dt*14);o.x+=(o.tx-o.x)*a;o.z+=(o.tz-o.z)*a;}
- moveP(me,inp,dt,o);me.target=facing(me);
+ if(me.dead>0)me.dead=Math.max(.01,me.dead-dt);
+ moveP(me,inp,dt,o);me.target=facing(me);G.elapsed+=dt;
  if(inp.act)NET.pr++;if(inp.dash)NET.ds++;
  NET.sendT-=dt;if(NET.sendT<=0||inp.act||inp.dash){netSend({t:'in',x:R2(me.x),z:R2(me.z),dx:R2(me.dir.x),dz:R2(me.dir.z),mv:me.moving?1:0,w:R2(me.walk),pr:NET.pr,ds:NET.ds,h:inp.actH?1:0,tg:me.target?[me.target.x,me.target.z]:null});NET.sendT=1/30;}
  G.time=Math.max(0,G.time-dt);for(const o2 of G.orders){o2.t-=dt;o2.age+=dt;}
@@ -763,11 +945,11 @@ function updFx(dt){if(!G)return;for(const q of G.parts){q.x+=q.vx*dt;q.y+=q.vy*d
 const ov=document.getElementById('overlay');
 function show(html){ov.innerHTML=html;ov.classList.remove('hidden');}
 function hide(){ov.classList.add('hidden');ov.innerHTML='';}
-const starsHtml=n=>{let s='';for(let i=0;i<3;i++)s+=i<n?'<span class="on">★</span>':'<span class="off">★</span>';return s;};
+const starsHtml=n=>{let s='';for(let i=0;i<4;i++)s+=i<n?'<span class="on">★</span>':'<span class="off">★</span>';return s;};
 const KEYS=`<div class="keys"><div><span class="pad"><kbd>↑</kbd><br><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span><span>bouger</span></div><div><kbd class="space">Espace</kbd><span>prendre · poser<br>rester appuyé : couper, laver</span></div><div><kbd class="shift">Maj</kbd><span>sprint</span></div></div>`;
 function showMsg(t){state='lobby';show(`<div class="card"><h2>${t}</h2></div>`);}
 function titleScreen(){state='title';const pre=(location.hash||'').replace('#','').toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);
- show(`<div class="card"><h1>Cuisine<br><span>en Duo</span></h1><p class="sub">Cuisinez à deux, chacun sur son ordinateur.</p>
+ show(`<div class="card"><h1>Chaud<br><span>Devant !</span></h1><p class="sub">Cuisinez à deux, chacun sur son ordinateur.</p>
  <div class="lobby"><div><button class="btn big" data-act="create">Créer une salle</button></div><div><input id="joinCode" maxlength="4" placeholder="CODE" value="${pre}" autocomplete="off" spellcheck="false"><button class="btn" data-act="join">Rejoindre</button></div></div>
  ${NET.joinErr?`<p class="err">${NET.joinErr}</p>`:''}<p class="tiny"><a href="/miroir">Ancienne version : Cuisine Miroir</a></p></div>`);
  const inp=document.getElementById('joinCode');inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();joinRoom(inp.value);}});inp.addEventListener('input',()=>{inp.value=inp.value.toUpperCase().replace(/[^A-Z]/g,'').slice(0,4);});}
@@ -782,13 +964,16 @@ function charsScreen(){state='chars';const me=meI();choice[me]=mySkin;
  ov.querySelectorAll('canvas[data-s]').forEach(cv=>chefPortrait(cv,+cv.dataset.s,+cv.dataset.p));}
 function setChoice(i){mySkin=(i+SKINS.length)%SKINS.length;choice[meI()]=mySkin;save('skin',mySkin);netSend({t:'skin',i:mySkin});charsScreen();}
 function hostMenu(){netSend({t:'menu'});menuScreen();}
-function menuScreen(){state='menu';show(`<div class="card wide"><h2>Monde 1</h2><div class="levels">${LEVELS.map((L,i)=>`<button class="lvl" data-act="brief" data-i="${i}"><b>${L.num}</b><span>${L.name}</span><em>${starsHtml(BEST[L.id]||0)}</em></button>`).join('')}</div><button class="btn ghost" data-act="tochars">Changer de chef</button></div>`);}
-function guestMenuWait(){state='menu';show(`<div class="card"><h2>Monde 1</h2><p class="sub">Ton partenaire choisit le niveau…</p></div>`);}
+const ALL=/[?&]tout\b/.test(location.search);
+const unlocked=i=>ALL||i===0||(BEST[LEVELS[i-1].id]||0)>=1;
+function menuScreen(){state='menu';const tot=LEVELS.reduce((s,L)=>s+(BEST[L.id]||0),0);
+ show(`<div class="card wide"><h2>Chaud Devant ! <small class="tot">★ ${tot} / ${LEVELS.length*4}</small></h2>${WORLDS.map((Wd,w)=>`<div class="world"><h3>${w+1} · ${Wd.nom}</h3><div class="levels">${LEVELS.map((L,i)=>L.w!==w?'':unlocked(i)?`<button class="lvl" data-act="brief" data-i="${i}"><b>${L.num}</b><span>${L.name}</span><em>${starsHtml(BEST[L.id]||0)}</em></button>`:`<div class="lvl locked"><b>${L.num}</b><span>🔒</span><em class="small">1 ★ au niveau d’avant</em></div>`).join('')}</div></div>`).join('')}<button class="btn ghost" data-act="tochars">Changer de chef</button></div>`);}
+function guestMenuWait(){state='menu';show(`<div class="card"><h2>Chaud Devant !</h2><p class="sub">Ton partenaire choisit le niveau…</p></div>`);}
 function hostBrief(i){netSend({t:'brief',i});briefScreen(i);}
 function briefScreen(i){state='brief';levelIdx=i;NET.ready=[false,false];startLevel(i);const L=LEVELS[i];
- show(`<div class="card"><div class="tag">${L.num}</div><h2>${L.name}</h2><div class="recipes">${L.recipes.map(r=>`<div><canvas width="120" height="90" data-r="${r}"></canvas><span>${RECIPES[r].nom}</span></div>`).join('')}</div>${i===0?KEYS:''}
+ show(`<div class="card"><div class="tag">${L.num}</div><h2>${L.name}</h2><div class="recipes">${L.recipes.map(r=>`<div><canvas width="120" height="90" data-r="${r}"></canvas><span>${RECIPES[r].nom}</span></div>`).join('')}</div>${L.hint?`<p class="hint">${L.hint}</p>`:''}<div class="goal">${L.stars.map((v,k)=>`<span><i>${'★'.repeat(k+1)}</i>${v}</span>`).join('')}<em>plats</em></div>${i===0?KEYS:''}
  <div class="readies"><span id="rd0"></span><span id="rd1"></span></div><button class="btn big" data-act="ready" id="readyBtn">Prêt !</button>${isHost()?'<button class="btn ghost" data-act="menu">Menu</button>':''}</div>`);
- ov.querySelectorAll('canvas[data-r]').forEach(cv=>{const c=cv.getContext('2d');icon(c,cv.dataset.r==='soupe'?'soupe':'salade',60,45,38);});updReady();}
+ ov.querySelectorAll('canvas[data-r]').forEach(cv=>{const c=cv.getContext('2d');icon(c,dishIcon(cv.dataset.r),60,45,38);});updReady();}
 function updReady(){for(const k of [0,1]){const el=document.getElementById('rd'+k);if(el)el.innerHTML=`<i style="background:${PCOL[k]}"></i>${k===meI()?'Toi':'Partenaire'} ${NET.ready[k]?'<b class="ok">✓</b>':'…'}`;}
  const b=document.getElementById('readyBtn');if(b&&NET.ready[meI()]){b.textContent='En attente…';b.disabled=true;}}
 function setReady(){if(state!=='brief'||NET.ready[meI()])return;NET.ready[meI()]=true;netSend({t:'ready'});updReady();tryStart();}
@@ -797,10 +982,10 @@ function go(){hide();state='play';for(const k in pressed)delete pressed[k];NET.l
  const sp=G.players[1];NET.remote=Object.assign({},NET.remote,{x:sp.x,z:sp.z,dx:0,dz:1,mv:0,h:0});}
 function pauseGame(fromNet){if(state!=='play')return;state='pause';if(!fromNet)netSend({t:'pause'});show(`<div class="card"><h2>Pause</h2><button class="btn big" data-act="resume">Reprendre</button>${isHost()?`<button class="btn ghost" data-act="brief" data-i="${levelIdx}">Recommencer</button><button class="btn ghost" data-act="menu">Menu</button>`:''}</div>`);}
 function resumeGame(fromNet){if(state!=='pause')return;hide();state='play';if(!fromNet)netSend({t:'resume'});}
-function endLevel(){state='result';const L=G.L,n=L.stars.filter(v=>G.score>=v).length;const r={idx:levelIdx,n,s:G.score,served:G.served,lost:G.lost};netSend({t:'result',r});showResult(r);}
+function endLevel(){state='result';const L=G.L,n=starsFor(L,G.served);const r={idx:levelIdx,n,s:G.score,served:G.served,lost:G.lost};netSend({t:'result',r});showResult(r);}
 function showResult(r){state='result';const L=LEVELS[r.idx];levelIdx=r.idx;if(r.n>(BEST[L.id]||0)){BEST[L.id]=r.n;save('best',BEST);}SFX0.end();
- const next=r.idx+1<LEVELS.length;
- show(`<div class="card"><div class="tag">${L.num}</div><h2>${L.name}</h2><div class="stars">${starsHtml(r.n)}</div><div class="stats"><div><b>${r.s}</b>points</div><div><b>${r.served}</b>servis</div><div><b>${r.lost}</b>ratés</div></div><p class="small">Étoiles : ${L.stars.join(' · ')}</p>
+ const next=r.idx+1<LEVELS.length&&r.n>=1,toGo=L.stars.find(v=>v>r.served);
+ show(`<div class="card"><div class="tag">${L.num}</div><h2>${r.n?['','Pas mal !','Bien joué !','Excellent !','Parfait !'][r.n]:'Encore un essai ?'}</h2><div class="stars">${starsHtml(r.n)}</div><div class="stats"><div><b>${r.served}</b>plats servis</div><div><b>${r.lost}</b>ratés</div><div><b>${r.s}</b>pièces</div></div><p class="small">${toGo?`Prochaine étoile : ${toGo} plats`:'Toutes les étoiles !'}</p>
  ${isHost()?(next?`<button class="btn big" data-act="brief" data-i="${r.idx+1}">Niveau suivant</button>`:'')+`<button class="btn" data-act="brief" data-i="${r.idx}">Rejouer</button><button class="btn ghost" data-act="menu">Menu</button>`:'<p class="sub">Ton partenaire choisit la suite…</p>'}</div>`);}
 ov.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;audioInit();const a=b.dataset.act;
  if(a==='create')createRoom();else if(a==='join'){const i=document.getElementById('joinCode');joinRoom(i?i.value:'');}
@@ -811,7 +996,7 @@ ov.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)ret
 function onKey(code){audioInit();const ok=code==='Enter'||code==='Space';
  if(state==='chars'){if(code==='ArrowLeft'||code==='KeyA')setChoice(mySkin-1);else if(code==='ArrowRight'||code==='KeyD')setChoice(mySkin+1);else if(ok&&isHost())hostMenu();}
  else if(state==='brief'&&ok)setReady();else if(state==='play'&&(code==='Escape'||code==='KeyP'))pauseGame();else if(state==='pause'&&(code==='Escape'||code==='KeyP'))resumeGame();
- else if(state==='result'&&ok&&isHost()&&levelIdx+1<LEVELS.length)hostBrief(levelIdx+1);}
+ else if(state==='result'&&ok&&isHost()&&levelIdx+1<LEVELS.length&&unlocked(levelIdx+1))hostBrief(levelIdx+1);}
 function updBar(){const r=document.getElementById('status');if(r)r.innerHTML=NET.role?`Salle <b>${NET.code}</b> · ${NET.partner?'2/2':'1/2'}${NET.ping!=null?' · '+NET.ping+' ms':''}`:'';}
 document.getElementById('muteBtn').addEventListener('click',e=>{e.currentTarget.blur();muted=!muted;e.currentTarget.textContent=muted?'🔇':'🔊';});
 document.getElementById('pauseBtn').addEventListener('click',e=>{e.currentTarget.blur();if(state==='play')pauseGame();else if(state==='pause')resumeGame();});
@@ -833,7 +1018,7 @@ function frame(now){
 }
 function initGL(){if(R3.tried)return;R3.tried=true;try{if(!r3Init(document.getElementById('gl')))show(`<div class="card"><h2>3D indisponible</h2><p class="small">Ton navigateur ne gère pas WebGL2. Essaie Chrome, Firefox ou Edge à jour.</p></div>`);}catch(e){console.error(e);}}
 resize();startLevel(0);titleScreen();updBar();requestAnimationFrame(frame);
-window.__cm={R3,get G(){return G},get state(){return state},NET,startLevel,go,LEVELS,press,planFor,briefScreen,update};
+window.__cm={R3,get G(){return G},get state(){return state},NET,startLevel,go,LEVELS,press,planFor,briefScreen,update,botSafe,bridgeF,camFor};
 
 })();
 </script>
