@@ -1,45 +1,28 @@
-# Cuisine Miroir 🪞🍳
+# Cuisine en Duo 🍅🍲
 
-Jeu de cuisine coopératif pour **deux joueurs**, vu de dessus, dans un palace Art déco.
-Deux cuisines sont séparées par un miroir magique : ce que l'on fait d'un côté peut se produire de l'autre.
-Couper sur sa planche coupe aussi celle du partenaire, un levier allume le feu de l'autre cuisine, la poubelle éteint parfois sa lumière… À vous de découvrir les liens cachés.
+Jeu de cuisine coopératif **en ligne pour deux joueurs**, chacun sur son ordinateur, dans **une seule cuisine partagée**, en 3D, dans l'esprit d'Overcooked.
 
-## Jouer
+- Couper les ingrédients, remplir la marmite (3 tomates), la surveiller : une soupe oubliée brûle et **prend feu** (extincteur près du mur).
+- Dresser, servir à la passe, puis **laver les assiettes sales** qui reviennent.
+- Commandes avec chrono, pourboires selon la rapidité, **séries** qui multiplient les pourboires, 3 minutes par niveau.
+- Deux niveaux pour l'instant : **1-1 Soupe de tomate** et **1-2 Salade et soupe**.
 
-Le jeu se joue **uniquement à deux, chacun sur son ordinateur**, dans une salle privée.
+## Commandes (identiques pour les deux joueurs)
 
-1. Le premier joueur ouvre l'adresse du jeu et clique sur **Créer une salle**. Il obtient un code de 4 lettres (et un lien à partager). Il joue la **Cuisine Soleil** et choisit les services.
-2. Le second joueur ouvre la même adresse, entre le code et clique sur **Rejoindre**. Il joue la **Cuisine Lune**.
-3. Chacun choisit son commis, puis les deux joueurs se déclarent prêts avant chaque service.
-
-Commandes, identiques pour les deux joueurs :
-
-| Se déplacer | Tout le reste |
+| Touche | Action |
 |---|---|
-| Flèches (ou Z Q S D) | Espace ou Entrée |
+| Flèches (ou Z Q S D) | se déplacer |
+| Espace (ou Entrée) | prendre / poser / servir ; **rester appuyé** pour couper, laver, utiliser l'extincteur |
+| Maj | sprint |
+| Échap | pause |
 
-- **Appuyer** : prendre, poser, actionner un levier ou un robinet.
-- **Rester appuyé** devant une planche : couper.
-- Poser un aliment prêt sur la pile d'assiettes : dresser l'assiette.
-- Échap : pause pour les deux joueurs. Une manette fonctionne aussi.
+## Technique
 
-## Principe
-
-Le miroir entre les deux cuisines est un **passe-plat** : on y pose un aliment, il apparaît de l'autre côté et y reste jusqu'à ce qu'on le prenne.
-Les deux cuisines n'ont pas les mêmes outils et **les commandes sont communes** : aucun plat ne sort sans les deux joueurs.
-Chacun a toujours quelque chose à faire : Soleil prépare (et prend de l'avance), Lune garnit, dresse, sert et fait la **plonge** (les assiettes propres sont limitées, chaque plat servi revient sale à l'évier).
-Chaque ticket montre le chemin du plat en icônes. Enchaîner les plats donne des bonus de série.
-La touche d'action vise le poste le plus proche à portée de main, en privilégiant celui qu'on regarde.
-
-## Progression
-
-| Service | Nouveauté |
-|---|---|
-| Apéritif I — Le passe-plat | Soleil coupe la tomate, Lune garnit de basilic, sert et lave (tutoriel, sans chrono) |
-| Apéritif II — Soupe du jour | Marmite chez Lune, salade à deux coupes chez Soleil |
-| Entrée I — Donnant-donnant | Lune envoie les citrons, Soleil coupe et fait le sorbet |
-| Entrée II — Chaud et froid | Chaque levier allume la machine de l'autre cuisine |
-| Entrée III — Coup de feu | Chrono, leviers cachés, un piège et un cadeau |
+- Rendu 3D maison en **WebGL2**, sans aucune bibliothèque : ombres portées, lumière douce, objets modélisés à partir de formes simples.
+- Le code source est dans `src/` ; `python build.py` reconstruit `index.html`.
+- `server.js` (Node, sans dépendance) sert le jeu et relie les deux joueurs d'une salle (code de 4 lettres).
+- L'ordinateur de l'hôte fait tourner la partie ; l'invité déplace son chef localement, sans latence.
+- L'ancienne version, **Cuisine Miroir**, reste jouable à l'adresse `/miroir`.
 
 ## Mettre en ligne sur Render
 
@@ -67,10 +50,12 @@ Lancer en local : `node server.js`, puis ouvrir `http://localhost:3000` dans deu
 
 ## Tests
 
-`tests/suite.py` (Python + Playwright) lance le serveur, ouvre deux navigateurs séparés et fait jouer deux joueurs automatiques **uniquement au clavier** sur tous les services, puis vérifie les cas limites : code inconnu, salle pleine, lien partagé, pause, onglet caché, départ et retour d'un joueur, latence réseau simulée (~100 ms), tailles d'écran et débit.
+`tests/play.py` lance le serveur et fait jouer deux joueurs automatiques **uniquement au clavier**, chacun dans son navigateur :
 
 ```
 pip install playwright && playwright install chromium
-python tests/suite.py          # tout
-python tests/suite.py edge     # cas limites seulement
+python tests/play.py 0 200   # niveau 1-1
+python tests/play.py 1 200   # niveau 1-2
 ```
+
+Les tests de l'ancienne version sont dans `tests/miroir/`.

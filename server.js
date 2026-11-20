@@ -13,7 +13,7 @@ const GUID = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 const MAX_PAYLOAD = 512 * 1024;
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
 
-const STATIC = { '/': 'index.html', '/index.html': 'index.html' };
+const STATIC = { '/': 'index.html', '/index.html': 'index.html', '/miroir': 'miroir.html', '/miroir.html': 'miroir.html' };
 
 const server = http.createServer((req, res) => {
   const url = (req.url || '/').split('?')[0];

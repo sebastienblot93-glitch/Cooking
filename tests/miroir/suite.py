@@ -75,10 +75,10 @@ async def play_level(A, B, i, timeout, shorten=None):
     return info
 
 async def main():
-    srv = subprocess.Popen(['node', 'server.js'], cwd=os.path.join(os.path.dirname(__file__),'..'), env={**os.environ, 'PORT': '3123'}, stdout=subprocess.DEVNULL)
-    prox = subprocess.Popen(['node', os.path.join(os.path.dirname(__file__),'delayproxy.js'), '3200', '3123', '45'])
+    srv = subprocess.Popen(['node', 'server.js'], cwd=os.path.join(os.path.dirname(__file__),'..','..'), env={**os.environ, 'PORT': '3123'}, stdout=subprocess.DEVNULL)
+    prox = subprocess.Popen(['node', os.path.join(os.path.dirname(__file__),'..','delayproxy.js'), '3200', '3123', '45'])
     await asyncio.sleep(1)
-    url = 'http://localhost:3123/'
+    url = 'http://localhost:3123/miroir'
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--no-sandbox', '--autoplay-policy=no-user-gesture-required'])
         which = sys.argv[1] if len(sys.argv) > 1 else 'all'
@@ -166,7 +166,7 @@ async def main():
             await A.context.close(); await B.context.close()
 
         if which in ('all', 'lag'):
-            A, B, code, ok = await pair(b, 'http://localhost:3200/')
+            A, B, code, ok = await pair(b, 'http://localhost:3200/miroir')
             await A.wait_for_timeout(3500)
             ping = await B.evaluate('()=>window.__cm.NET.ping')
             info = await play_level(A, B, 1, 200, None)
